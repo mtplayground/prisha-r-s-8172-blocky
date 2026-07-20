@@ -18,6 +18,7 @@ import {
 import { Playfield } from '../game/Playfield';
 import { SurvivalTimer } from '../game/SurvivalTimer';
 import { DifficultyScreen } from './DifficultyScreen';
+import { PlayerSwitchScreen } from './PlayerSwitchScreen';
 import { RoundEndScreen } from './RoundEndScreen';
 import { StartScreen } from './StartScreen';
 
@@ -195,21 +196,13 @@ export function ScreenRouter({ state, dispatch }: ScreenRouterProps) {
 
     case 'handoff':
       return (
-        <div className="space-y-5">
-          <p className="text-sm font-semibold uppercase tracking-normal text-hazard">
-            Handoff
-          </p>
-          <h2 className="text-3xl font-bold tracking-normal">
-            Player 2 is next.
-          </h2>
-          <p className="max-w-2xl text-lg leading-8 text-zinc-700">
-            Player 1 has completed all {ROUND_COUNT} rounds on this shared
-            device.
-          </p>
-          <PrimaryButton onClick={() => dispatch({ type: 'startNextPlayer' })}>
-            Start player 2 setup
-          </PrimaryButton>
-        </div>
+        <PlayerSwitchScreen
+          previousPlayerId={1}
+          nextPlayerId={2}
+          completedRounds={state.players[1].roundTimes.length}
+          totalRounds={ROUND_COUNT}
+          onReady={() => dispatch({ type: 'startNextPlayer' })}
+        />
       );
 
     case 'results':
