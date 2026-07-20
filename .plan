@@ -1,0 +1,38 @@
+# Blocky Architecture Plan
+
+## App Shape
+- Build a browser-only React + Tailwind single-page app. No backend, database, auth, or persistence is needed; match and round state lives in memory for one shared-device session.
+- Use Vite for local development and bundling, with TypeScript for shared game types and predictable state transitions.
+- Keep keyboard focus on the app/playfield so left/right arrow controls work immediately during gameplay.
+
+## Module Structure
+- `src/main.tsx`: React entry point and global styles import.
+- `src/App.tsx`: top-level shell, screen routing, and wiring between state/actions and screen components.
+- `src/state/gameState.ts`: in-memory reducer/state machine for screen flow, active player, round index, difficulty selections, round results, and restart.
+- `src/types/game.ts`: shared types such as `PlayerId`, `Difficulty`, `Screen`, `RoundResult`, `MatchState`, `GameConfig`, and block/player geometry.
+- `src/config/difficulty.ts`: Easy/Medium/Hard gameplay tuning for falling block speed, spawn frequency, and any fairness limits.
+- `src/components/screens/`: `StartScreen`, `DifficultyScreen`, `PlayScreen`, `RoundEndScreen`, `HandoffScreen`, `ResultsScreen`.
+- `src/components/game/`: `Playfield`, `PlayerBlock`, `FallingBlock`, `Hud`, and optional `GameOverFeedback`.
+- `src/hooks/`: `useKeyboardControls`, `useGameLoop`, `useFallingBlocks`, and `useSurvivalTimer`.
+- `src/utils/`: collision math, random spawn helpers, timer formatting, and winner scoring.
+- `src/__tests__/` or `tests/`: unit tests for reducer/scoring/collision and an end-to-end test for the complete two-player flow.
+
+## Issue Dependencies
+- Issue #1 establishes the React + Tailwind scaffold, dev tooling, base app shell, and `.env.example`.
+- Issue #2 creates the state machine and screen router used by all later screens.
+- Issue #3 fills the start/instructions screen for `Blocky`.
+- Issues #4-#8 build the single-round gameplay loop: playfield, player movement, falling blocks, collision-triggered round end, and survival timer.
+- Issues #9-#10 add per-player difficulty selection and apply selected tuning to all three of that player's rounds.
+- Issues #11-#14 complete the match loop: round-end screen, best-of-3 scoring, player handoff, final results, winner comparison, and play-again reset.
+- Issues #15-#16 polish gameplay feedback with collision sound/animation and in-play player/round HUD.
+- Issue #17 verifies the full flow end to end: start, player 1 difficulty, three rounds, handoff, player 2 difficulty, three rounds, final winner.
+
+## Key Design Decisions
+- Model navigation as explicit screen state instead of URL routes because the game is a short in-memory flow with no deep linking requirement.
+- Use a reducer/action model for match state so round transitions, scoring, and restart behavior remain testable independently of React rendering.
+- Keep gameplay geometry in CSS pixels within a bounded playfield and clamp player/block movement inside those bounds.
+- Use `requestAnimationFrame` for movement, falling blocks, collision checks, and timer updates; pause/freeze the loop immediately on collision.
+- Represent difficulty as config data rather than branching throughout gameplay code.
+- Determine the winner from each player's longest recorded round time; ties should be handled explicitly in results logic.
+- Keep random spawning fair by enforcing reasonable block sizes, spawn intervals, horizontal bounds, and cleanup after blocks leave the playfield.
+- Add focused unit tests for state transitions, scoring, and collision math before relying on the end-to-end playthrough.
