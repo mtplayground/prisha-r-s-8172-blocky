@@ -17,6 +17,7 @@ import {
 import { Playfield } from '../game/Playfield';
 import { SurvivalTimer } from '../game/SurvivalTimer';
 import { DifficultyScreen } from './DifficultyScreen';
+import { RoundEndScreen } from './RoundEndScreen';
 import { StartScreen } from './StartScreen';
 
 type ScreenRouterProps = {
@@ -171,25 +172,13 @@ export function ScreenRouter({ state, dispatch }: ScreenRouterProps) {
 
     case 'roundEnd':
       return (
-        <div className="space-y-5">
-          <p className="text-sm font-semibold uppercase tracking-normal text-hazard">
-            Round end
-          </p>
-          <h2 className="text-3xl font-bold tracking-normal">
-            Player {state.activePlayer}, round {state.lastRoundTime?.round}
-          </h2>
-          <p className="max-w-2xl text-lg leading-8 text-zinc-700">
-            Recorded time:{' '}
-            {state.lastRoundTime
-              ? formatElapsedTime(state.lastRoundTime.elapsedMs)
-              : 'none'}
-          </p>
-          <PrimaryButton
-            onClick={() => dispatch({ type: 'continueAfterRound' })}
-          >
-            Continue
-          </PrimaryButton>
-        </div>
+        <RoundEndScreen
+          playerId={state.activePlayer}
+          roundTime={state.lastRoundTime}
+          completedRounds={activePlayer.roundTimes.length}
+          totalRounds={ROUND_COUNT}
+          onContinue={() => dispatch({ type: 'continueAfterRound' })}
+        />
       );
 
     case 'handoff':
