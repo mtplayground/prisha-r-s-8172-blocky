@@ -29,3 +29,51 @@ textarea,
 select {
   font: inherit;
 }
+
+.game-over-impact {
+  animation: game-over-shake 420ms ease-out;
+}
+
+.game-over-flash {
+  animation: game-over-flash 520ms ease-out both;
+}
+
+@keyframes game-over-shake {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+
+  18% {
+    transform: translateX(-8px);
+  }
+
+  36% {
+    transform: translateX(7px);
+  }
+
+  54% {
+    transform: translateX(-5px);
+  }
+
+  72% {
+    transform: translateX(3px);
+  }
+}
+
+@keyframes game-over-flash {
+  0% {
+    opacity: 0;
+    transform: scale(0.94);
+  }
+
+  18% {
+    opacity: 1;
+    transform: scale(1);
+  }
+
+  100% {
+    opacity: 0;
+    transform: scale(1.04);
+  }
+}

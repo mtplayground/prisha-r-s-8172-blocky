@@ -1,4 +1,4 @@
-import { useCallback, useRef } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import type React from 'react';
 import { getDifficultyOption } from '../../config/difficulty';
 import { useSurvivalTimer } from '../../hooks/useSurvivalTimer';
@@ -8,6 +8,7 @@ import {
   type Difficulty,
   type MatchState,
 } from '../../types/game';
+import { playGameOverSound } from '../../utils/gameOverEffect';
 import { Playfield } from '../game/Playfield';
 import { SurvivalTimer } from '../game/SurvivalTimer';
 import { DifficultyScreen } from './DifficultyScreen';
@@ -49,22 +50,54 @@ function PlayingScreen({
   dispatch: React.Dispatch<GameAction>;
 }) {
   const hasCompletedRoundRef = useRef(false);
+  const roundEndDelayRef = useRef<number | null>(null);
+  const [isGameOverEffectVisible, setIsGameOverEffectVisible] = useState(false);
   const { elapsedMs, stopTimer } = useSurvivalTimer();
   const difficultyOption = getDifficultyOption(activePlayerDifficulty);
 
-  const completeCurrentRound = useCallback(() => {
-    if (hasCompletedRoundRef.current) {
-      return;
-    }
+  useEffect(() => {
+    return () => {
+      if (roundEndDelayRef.current !== null) {
+        window.clearTimeout(roundEndDelayRef.current);
+      }
+    };
+  }, []);
 
-    hasCompletedRoundRef.current = true;
-    const finalElapsedMs = stopTimer();
+  const completeCurrentRound = useCallback(
+    ({ showGameOverEffect = false } = {}) => {
+      if (hasCompletedRoundRef.current) {
+        return;
+      }
 
-    dispatch({
-      type: 'completeRound',
-      elapsedMs: finalElapsedMs,
-    });
-  }, [dispatch, stopTimer]);
+      hasCompletedRoundRef.current = true;
+      const finalElapsedMs = stopTimer();
+
+      function dispatchRoundEnd() {
+        dispatch({
+          type: 'completeRound',
+          elapsedMs: finalElapsedMs,
+        });
+      }
+
+      if (showGameOverEffect) {
+        setIsGameOverEffectVisible(true);
+        playGameOverSound();
+        roundEndDelayRef.current = window.setTimeout(dispatchRoundEnd, 650);
+        return;
+      }
+
+      dispatchRoundEnd();
+    },
+    [dispatch, stopTimer],
+  );
+
+  const handleCollision = useCallback(() => {
+    completeCurrentRound({ showGameOverEffect: true });
+  }, [completeCurrentRound]);
+
+  const handleManualRoundEnd = useCallback(() => {
+    completeCurrentRound();
+  }, [completeCurrentRound]);
 
   return (
     <div className="space-y-5">
@@ -84,9 +117,10 @@ function PlayingScreen({
       <SurvivalTimer elapsedMs={elapsedMs} />
       <Playfield
         difficulty={activePlayerDifficulty}
-        onCollision={completeCurrentRound}
+        isGameOver={isGameOverEffectVisible}
+        onCollision={handleCollision}
       />
-      <PrimaryButton onClick={completeCurrentRound}>
+      <PrimaryButton onClick={handleManualRoundEnd}>
         Record round end
       </PrimaryButton>
     </div>
