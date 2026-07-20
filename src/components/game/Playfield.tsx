@@ -1,13 +1,9 @@
-import { INITIAL_PLAYER_X, PLAYFIELD_CONFIG } from '../../config/playfield';
-import { clampPlayerX } from '../../utils/playfield';
+import { PLAYFIELD_CONFIG } from '../../config/playfield';
+import { useArrowKeyMovement } from '../../hooks/useArrowKeyMovement';
 import { PlayerBlock } from './PlayerBlock';
 
 export function Playfield() {
-  const playerX = clampPlayerX({
-    x: INITIAL_PLAYER_X,
-    playfieldWidth: PLAYFIELD_CONFIG.width,
-    blockSize: PLAYFIELD_CONFIG.blockSize,
-  });
+  const playerX = useArrowKeyMovement();
   const playerY =
     PLAYFIELD_CONFIG.height -
     PLAYFIELD_CONFIG.blockSize -

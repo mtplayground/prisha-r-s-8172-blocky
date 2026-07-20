@@ -1,3 +1,5 @@
+import type { HorizontalDirection } from '../types/game';
+
 export function clampPlayerX({
   x,
   playfieldWidth,
@@ -14,4 +16,28 @@ export function clampPlayerX({
   }
 
   return Math.min(Math.max(0, x), maxX);
+}
+
+export function movePlayerX({
+  currentX,
+  direction,
+  deltaMs,
+  speed,
+  playfieldWidth,
+  blockSize,
+}: {
+  currentX: number;
+  direction: HorizontalDirection;
+  deltaMs: number;
+  speed: number;
+  playfieldWidth: number;
+  blockSize: number;
+}): number {
+  if (direction === 0 || deltaMs <= 0 || speed <= 0) {
+    return clampPlayerX({ x: currentX, playfieldWidth, blockSize });
+  }
+
+  const nextX = currentX + direction * speed * (deltaMs / 1000);
+
+  return clampPlayerX({ x: nextX, playfieldWidth, blockSize });
 }

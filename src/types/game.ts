@@ -32,4 +32,7 @@ export type PlayfieldConfig = {
   height: number;
   blockSize: number;
   playerBottomOffset: number;
+  playerSpeed: number;
 };
+
+export type HorizontalDirection = -1 | 0 | 1;

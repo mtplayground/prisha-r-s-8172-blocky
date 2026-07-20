@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { clampPlayerX } from './playfield';
+import { clampPlayerX, movePlayerX } from './playfield';
 
 describe('clampPlayerX', () => {
   it('keeps the player inside the left edge', () => {
@@ -18,5 +18,69 @@ describe('clampPlayerX', () => {
     expect(clampPlayerX({ x: 192, playfieldWidth: 432, blockSize: 48 })).toBe(
       192,
     );
+  });
+});
+
+describe('movePlayerX', () => {
+  it('moves left using elapsed time and speed', () => {
+    expect(
+      movePlayerX({
+        currentX: 192,
+        direction: -1,
+        deltaMs: 100,
+        speed: 320,
+        playfieldWidth: 432,
+        blockSize: 48,
+      }),
+    ).toBe(160);
+  });
+
+  it('moves right using elapsed time and speed', () => {
+    expect(
+      movePlayerX({
+        currentX: 192,
+        direction: 1,
+        deltaMs: 100,
+        speed: 320,
+        playfieldWidth: 432,
+        blockSize: 48,
+      }),
+    ).toBe(224);
+  });
+
+  it('does not move when no horizontal direction is active', () => {
+    expect(
+      movePlayerX({
+        currentX: 192,
+        direction: 0,
+        deltaMs: 100,
+        speed: 320,
+        playfieldWidth: 432,
+        blockSize: 48,
+      }),
+    ).toBe(192);
+  });
+
+  it('clamps movement to the playfield edges', () => {
+    expect(
+      movePlayerX({
+        currentX: 2,
+        direction: -1,
+        deltaMs: 100,
+        speed: 320,
+        playfieldWidth: 432,
+        blockSize: 48,
+      }),
+    ).toBe(0);
+    expect(
+      movePlayerX({
+        currentX: 380,
+        direction: 1,
+        deltaMs: 100,
+        speed: 320,
+        playfieldWidth: 432,
+        blockSize: 48,
+      }),
+    ).toBe(384);
   });
 });
