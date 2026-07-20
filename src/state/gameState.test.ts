@@ -38,6 +38,25 @@ describe('gameReducer', () => {
     expect(getActivePlayer(playingState).difficulty).toBe('hard');
   });
 
+  it('keeps the active player difficulty across that player set', () => {
+    const playingState = gameReducer(
+      gameReducer(createInitialMatchState(), { type: 'beginMatch' }),
+      {
+        type: 'chooseDifficulty',
+        difficulty: 'hard',
+      },
+    );
+    const roundEnd = gameReducer(playingState, {
+      type: 'completeRound',
+      elapsedMs: 1500,
+    });
+    const nextRound = gameReducer(roundEnd, { type: 'continueAfterRound' });
+
+    expect(nextRound.screen).toBe('playing');
+    expect(nextRound.activePlayer).toBe(1);
+    expect(nextRound.players[1].difficulty).toBe('hard');
+  });
+
   it('records three player 1 rounds before the handoff screen', () => {
     const roundOneEnd = gameReducer(chooseDefaultDifficulty(), {
       type: 'completeRound',
@@ -100,6 +119,7 @@ describe('gameReducer', () => {
     expect(state.activePlayer).toBe(2);
     expect(state.players[1].roundTimes).toHaveLength(3);
     expect(state.players[2].roundTimes).toHaveLength(3);
+    expect(state.players[1].difficulty).toBe('medium');
     expect(state.players[2].difficulty).toBe('easy');
   });
 
