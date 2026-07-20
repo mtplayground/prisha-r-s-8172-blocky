@@ -10,5 +10,9 @@ export default defineConfig({
   preview: {
     host: '0.0.0.0',
     port: 8080,
+    allowedHosts: [
+      'prisha-r-s-8172-blocky-1e821c-bp4af.sprites.app',
+      'prisha-r-s-8172-blocky-1e821c-bp4af.mctai.app',
+    ],
   },
 });

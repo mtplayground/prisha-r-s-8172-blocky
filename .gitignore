@@ -11,3 +11,7 @@ dist/
 .pipeline-state.json
 .gitkeep
 .progress
+.env.production
+.deploy_url
+ui-verify.cjs
+verify-screenshot.png
