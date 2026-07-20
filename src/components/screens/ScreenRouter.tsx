@@ -10,14 +10,13 @@ import {
 import { ROUND_COUNT, type MatchState, type PlayerId } from '../../types/game';
 import { Playfield } from '../game/Playfield';
 import { SurvivalTimer } from '../game/SurvivalTimer';
+import { DifficultyScreen } from './DifficultyScreen';
 import { StartScreen } from './StartScreen';
 
 type ScreenRouterProps = {
   state: MatchState;
   dispatch: React.Dispatch<GameAction>;
 };
-
-const difficultyPreview = 'medium';
 
 function PrimaryButton({
   children,
@@ -143,28 +142,12 @@ export function ScreenRouter({ state, dispatch }: ScreenRouterProps) {
 
     case 'difficulty':
       return (
-        <div className="space-y-5">
-          <p className="text-sm font-semibold uppercase tracking-normal text-hazard">
-            Difficulty
-          </p>
-          <h2 className="text-3xl font-bold tracking-normal">
-            Player {state.activePlayer}
-          </h2>
-          <p className="max-w-2xl text-lg leading-8 text-zinc-700">
-            Difficulty selection is represented in state; the full choice UI
-            will be added in its dedicated issue.
-          </p>
-          <PrimaryButton
-            onClick={() =>
-              dispatch({
-                type: 'chooseDifficulty',
-                difficulty: difficultyPreview,
-              })
-            }
-          >
-            Continue with Medium
-          </PrimaryButton>
-        </div>
+        <DifficultyScreen
+          playerId={state.activePlayer}
+          onChooseDifficulty={(difficulty) =>
+            dispatch({ type: 'chooseDifficulty', difficulty })
+          }
+        />
       );
 
     case 'playing':
