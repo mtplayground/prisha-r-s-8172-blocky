@@ -26,3 +26,10 @@ export type MatchState = {
   players: Record<PlayerId, PlayerMatchState>;
   lastRoundTime: RoundTime | null;
 };
+
+export type PlayfieldConfig = {
+  width: number;
+  height: number;
+  blockSize: number;
+  playerBottomOffset: number;
+};
