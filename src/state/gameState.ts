@@ -5,6 +5,7 @@ import {
   type MatchState,
   type PlayerId,
   type PlayerMatchState,
+  type RoundTime,
 } from '../types/game';
 
 export type GameAction =
@@ -45,6 +46,22 @@ export function hasPlayerFinishedRounds(
   playerId: PlayerId,
 ): boolean {
   return state.players[playerId].roundTimes.length >= ROUND_COUNT;
+}
+
+export function getPlayerBestRoundTime(
+  player: PlayerMatchState,
+): RoundTime | null {
+  if (player.roundTimes.length === 0) {
+    return null;
+  }
+
+  return player.roundTimes.reduce((bestRound, roundTime) =>
+    roundTime.elapsedMs > bestRound.elapsedMs ? roundTime : bestRound,
+  );
+}
+
+export function getPlayerScoreMs(player: PlayerMatchState): number | null {
+  return getPlayerBestRoundTime(player)?.elapsedMs ?? null;
 }
 
 export function formatElapsedTime(elapsedMs: number): string {

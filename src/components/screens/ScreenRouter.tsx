@@ -5,6 +5,7 @@ import { useSurvivalTimer } from '../../hooks/useSurvivalTimer';
 import {
   formatElapsedTime,
   getActivePlayer,
+  getPlayerBestRoundTime,
   getPlayerOrder,
   type GameAction,
 } from '../../state/gameState';
@@ -66,6 +67,7 @@ function PlayerSummary({
   playerId: PlayerId;
 }) {
   const player = state.players[playerId];
+  const bestRoundTime = getPlayerBestRoundTime(player);
 
   return (
     <div className="border border-line bg-white p-4">
@@ -74,6 +76,16 @@ function PlayerSummary({
       <SummaryLine
         label="Rounds"
         value={`${player.roundTimes.length} / ${ROUND_COUNT}`}
+      />
+      <SummaryLine
+        label="Best time"
+        value={
+          bestRoundTime
+            ? `${formatElapsedTime(bestRoundTime.elapsedMs)} (round ${
+                bestRoundTime.round
+              })`
+            : 'pending'
+        }
       />
       <div className="mt-3 space-y-1 text-sm text-zinc-700">
         {player.roundTimes.length === 0 ? (
