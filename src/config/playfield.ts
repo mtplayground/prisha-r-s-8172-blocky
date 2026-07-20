@@ -5,6 +5,7 @@ export const PLAYFIELD_CONFIG: PlayfieldConfig = {
   height: 560,
   blockSize: 48,
   playerBottomOffset: 28,
+  playerSpeed: 320,
 };
 
 export const INITIAL_PLAYER_X =
