@@ -46,3 +46,10 @@ export type FallingBlockState = {
   y: number;
   size: number;
 };
+
+export type Rectangle = {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+};

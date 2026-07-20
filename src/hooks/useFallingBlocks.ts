@@ -8,7 +8,7 @@ import {
   getFallingBlockSpawnLanes,
 } from '../utils/playfield';
 
-export function useFallingBlocks() {
+export function useFallingBlocks({ enabled = true } = {}) {
   const [blocks, setBlocks] = useState<FallingBlockState[]>([]);
   const animationFrameRef = useRef<number | null>(null);
   const lastFrameTimeRef = useRef<number | null>(null);
@@ -26,6 +26,12 @@ export function useFallingBlocks() {
   );
 
   useEffect(() => {
+    if (!enabled) {
+      lastFrameTimeRef.current = null;
+      spawnTimerRef.current = 0;
+      return;
+    }
+
     function spawnBlock(currentBlocks: FallingBlockState[]) {
       const x = chooseFallingBlockSpawnX({
         lanes,
@@ -86,7 +92,7 @@ export function useFallingBlocks() {
         window.cancelAnimationFrame(animationFrameRef.current);
       }
     };
-  }, [lanes]);
+  }, [enabled, lanes]);
 
   return blocks;
 }

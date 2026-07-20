@@ -1,16 +1,40 @@
+import { useEffect, useState } from 'react';
 import { PLAYFIELD_CONFIG } from '../../config/playfield';
 import { useArrowKeyMovement } from '../../hooks/useArrowKeyMovement';
 import { useFallingBlocks } from '../../hooks/useFallingBlocks';
+import { getBlockRectangle, hasPlayerCollision } from '../../utils/playfield';
 import { FallingBlock } from './FallingBlock';
 import { PlayerBlock } from './PlayerBlock';
 
-export function Playfield() {
-  const playerX = useArrowKeyMovement();
-  const fallingBlocks = useFallingBlocks();
+type PlayfieldProps = {
+  onCollision: () => void;
+};
+
+export function Playfield({ onCollision }: PlayfieldProps) {
+  const [hasCollided, setHasCollided] = useState(false);
+  const playerX = useArrowKeyMovement({ enabled: !hasCollided });
+  const fallingBlocks = useFallingBlocks({ enabled: !hasCollided });
   const playerY =
     PLAYFIELD_CONFIG.height -
     PLAYFIELD_CONFIG.blockSize -
     PLAYFIELD_CONFIG.playerBottomOffset;
+
+  useEffect(() => {
+    if (hasCollided) {
+      return;
+    }
+
+    const player = getBlockRectangle({
+      x: playerX,
+      y: playerY,
+      size: PLAYFIELD_CONFIG.blockSize,
+    });
+
+    if (hasPlayerCollision({ player, fallingBlocks })) {
+      setHasCollided(true);
+      onCollision();
+    }
+  }, [fallingBlocks, hasCollided, onCollision, playerX, playerY]);
 
   return (
     <div

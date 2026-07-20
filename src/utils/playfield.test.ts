@@ -5,7 +5,10 @@ import {
   clampPlayerX,
   createFallingBlock,
   getFallingBlockSpawnLanes,
+  getBlockRectangle,
+  hasPlayerCollision,
   movePlayerX,
+  rectanglesTouchOrOverlap,
 } from './playfield';
 
 describe('clampPlayerX', () => {
@@ -136,5 +139,55 @@ describe('falling block helpers', () => {
     });
 
     expect(blocks).toEqual([{ id: 1, x: 0, y: 150, size: 48 }]);
+  });
+});
+
+describe('collision helpers', () => {
+  it('builds block rectangles from game coordinates', () => {
+    expect(getBlockRectangle({ x: 10, y: 20, size: 48 })).toEqual({
+      x: 10,
+      y: 20,
+      width: 48,
+      height: 48,
+    });
+  });
+
+  it('detects overlapping rectangles', () => {
+    expect(
+      rectanglesTouchOrOverlap(
+        { x: 100, y: 100, width: 48, height: 48 },
+        { x: 120, y: 120, width: 48, height: 48 },
+      ),
+    ).toBe(true);
+  });
+
+  it('detects rectangles that exactly touch edges', () => {
+    expect(
+      rectanglesTouchOrOverlap(
+        { x: 100, y: 100, width: 48, height: 48 },
+        { x: 148, y: 100, width: 48, height: 48 },
+      ),
+    ).toBe(true);
+  });
+
+  it('ignores separated rectangles', () => {
+    expect(
+      rectanglesTouchOrOverlap(
+        { x: 100, y: 100, width: 48, height: 48 },
+        { x: 149, y: 100, width: 48, height: 48 },
+      ),
+    ).toBe(false);
+  });
+
+  it('detects player collision against any falling block', () => {
+    expect(
+      hasPlayerCollision({
+        player: { x: 192, y: 484, width: 48, height: 48 },
+        fallingBlocks: [
+          { id: 1, x: 0, y: 100, size: 48 },
+          { id: 2, x: 192, y: 440, size: 48 },
+        ],
+      }),
+    ).toBe(true);
   });
 });

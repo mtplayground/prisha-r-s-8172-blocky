@@ -1,4 +1,5 @@
 import type { FallingBlockState, HorizontalDirection } from '../types/game';
+import type { Rectangle } from '../types/game';
 
 export function clampPlayerX({
   x,
@@ -131,4 +132,52 @@ export function advanceFallingBlocks({
       y: block.y + distance,
     }))
     .filter((block) => block.y <= playfieldHeight);
+}
+
+export function getBlockRectangle({
+  x,
+  y,
+  size,
+}: {
+  x: number;
+  y: number;
+  size: number;
+}): Rectangle {
+  return {
+    x,
+    y,
+    width: size,
+    height: size,
+  };
+}
+
+export function rectanglesTouchOrOverlap(
+  first: Rectangle,
+  second: Rectangle,
+): boolean {
+  return (
+    first.x <= second.x + second.width &&
+    first.x + first.width >= second.x &&
+    first.y <= second.y + second.height &&
+    first.y + first.height >= second.y
+  );
+}
+
+export function hasPlayerCollision({
+  player,
+  fallingBlocks,
+}: {
+  player: Rectangle;
+  fallingBlocks: FallingBlockState[];
+}): boolean {
+  return fallingBlocks.some((block) =>
+    rectanglesTouchOrOverlap(
+      player,
+      getBlockRectangle({
+        x: block.x,
+        y: block.y,
+        size: block.size,
+      }),
+    ),
+  );
 }
