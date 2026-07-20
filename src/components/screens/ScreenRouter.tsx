@@ -1,5 +1,6 @@
-import { useRef } from 'react';
+import { useCallback, useRef } from 'react';
 import type React from 'react';
+import { useSurvivalTimer } from '../../hooks/useSurvivalTimer';
 import {
   formatElapsedTime,
   getActivePlayer,
@@ -8,6 +9,7 @@ import {
 } from '../../state/gameState';
 import { ROUND_COUNT, type MatchState, type PlayerId } from '../../types/game';
 import { Playfield } from '../game/Playfield';
+import { SurvivalTimer } from '../game/SurvivalTimer';
 import { StartScreen } from './StartScreen';
 
 type ScreenRouterProps = {
@@ -91,14 +93,22 @@ function PlayingScreen({
   activePlayerDifficulty: string;
   dispatch: React.Dispatch<GameAction>;
 }) {
-  const roundStartedAtRef = useRef(performance.now());
+  const hasCompletedRoundRef = useRef(false);
+  const { elapsedMs, stopTimer } = useSurvivalTimer();
 
-  function completeCurrentRound() {
+  const completeCurrentRound = useCallback(() => {
+    if (hasCompletedRoundRef.current) {
+      return;
+    }
+
+    hasCompletedRoundRef.current = true;
+    const finalElapsedMs = stopTimer();
+
     dispatch({
       type: 'completeRound',
-      elapsedMs: performance.now() - roundStartedAtRef.current,
+      elapsedMs: finalElapsedMs,
     });
-  }
+  }, [dispatch, stopTimer]);
 
   return (
     <div className="space-y-5">
@@ -115,6 +125,7 @@ function PlayingScreen({
           difficulty: {activePlayerDifficulty}.
         </p>
       </div>
+      <SurvivalTimer elapsedMs={elapsedMs} />
       <Playfield onCollision={completeCurrentRound} />
       <PrimaryButton onClick={completeCurrentRound}>
         Record round end

@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   createInitialMatchState,
+  formatElapsedTime,
   gameReducer,
   getActivePlayer,
 } from './gameState';
@@ -110,5 +111,17 @@ describe('gameReducer', () => {
     );
     expect(gameReducer(state, { type: 'continueAfterRound' })).toBe(state);
     expect(gameReducer(state, { type: 'startNextPlayer' })).toBe(state);
+  });
+});
+
+describe('formatElapsedTime', () => {
+  it('formats elapsed milliseconds as seconds and tenths', () => {
+    expect(formatElapsedTime(0)).toBe('0.0s');
+    expect(formatElapsedTime(1234)).toBe('1.2s');
+    expect(formatElapsedTime(9876)).toBe('9.8s');
+  });
+
+  it('does not display negative elapsed time', () => {
+    expect(formatElapsedTime(-200)).toBe('0.0s');
   });
 });
