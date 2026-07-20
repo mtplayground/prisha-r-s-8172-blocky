@@ -4,6 +4,8 @@ import {
   formatElapsedTime,
   gameReducer,
   getActivePlayer,
+  getPlayerBestRoundTime,
+  getPlayerScoreMs,
 } from './gameState';
 
 function chooseDefaultDifficulty(state = createInitialMatchState()) {
@@ -121,6 +123,21 @@ describe('gameReducer', () => {
     expect(state.players[2].roundTimes).toHaveLength(3);
     expect(state.players[1].difficulty).toBe('medium');
     expect(state.players[2].difficulty).toBe('easy');
+  });
+
+  it('uses the longest of three rounds as the player score', () => {
+    let state = chooseDefaultDifficulty();
+
+    for (const elapsedMs of [2400, 5100, 3700]) {
+      state = gameReducer(state, { type: 'completeRound', elapsedMs });
+      state = gameReducer(state, { type: 'continueAfterRound' });
+    }
+
+    expect(getPlayerBestRoundTime(state.players[1])).toEqual({
+      round: 2,
+      elapsedMs: 5100,
+    });
+    expect(getPlayerScoreMs(state.players[1])).toBe(5100);
   });
 
   it('ignores actions that do not match the current screen', () => {
