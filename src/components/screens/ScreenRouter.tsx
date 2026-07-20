@@ -2,23 +2,17 @@ import { useCallback, useRef } from 'react';
 import type React from 'react';
 import { getDifficultyOption } from '../../config/difficulty';
 import { useSurvivalTimer } from '../../hooks/useSurvivalTimer';
-import {
-  formatElapsedTime,
-  getActivePlayer,
-  getPlayerBestRoundTime,
-  getPlayerOrder,
-  type GameAction,
-} from '../../state/gameState';
+import { getActivePlayer, type GameAction } from '../../state/gameState';
 import {
   ROUND_COUNT,
   type Difficulty,
   type MatchState,
-  type PlayerId,
 } from '../../types/game';
 import { Playfield } from '../game/Playfield';
 import { SurvivalTimer } from '../game/SurvivalTimer';
 import { DifficultyScreen } from './DifficultyScreen';
 import { PlayerSwitchScreen } from './PlayerSwitchScreen';
+import { ResultsScreen } from './ResultsScreen';
 import { RoundEndScreen } from './RoundEndScreen';
 import { StartScreen } from './StartScreen';
 
@@ -42,64 +36,6 @@ function PrimaryButton({
     >
       {children}
     </button>
-  );
-}
-
-function SummaryLine({
-  label,
-  value,
-}: {
-  label: string;
-  value: React.ReactNode;
-}) {
-  return (
-    <div className="flex items-center justify-between gap-4 border-b border-line py-2 last:border-b-0">
-      <span className="text-sm text-zinc-600">{label}</span>
-      <span className="text-sm font-semibold text-ink">{value}</span>
-    </div>
-  );
-}
-
-function PlayerSummary({
-  state,
-  playerId,
-}: {
-  state: MatchState;
-  playerId: PlayerId;
-}) {
-  const player = state.players[playerId];
-  const bestRoundTime = getPlayerBestRoundTime(player);
-
-  return (
-    <div className="border border-line bg-white p-4">
-      <h3 className="text-base font-bold">Player {playerId}</h3>
-      <SummaryLine label="Difficulty" value={player.difficulty ?? 'pending'} />
-      <SummaryLine
-        label="Rounds"
-        value={`${player.roundTimes.length} / ${ROUND_COUNT}`}
-      />
-      <SummaryLine
-        label="Best time"
-        value={
-          bestRoundTime
-            ? `${formatElapsedTime(bestRoundTime.elapsedMs)} (round ${
-                bestRoundTime.round
-              })`
-            : 'pending'
-        }
-      />
-      <div className="mt-3 space-y-1 text-sm text-zinc-700">
-        {player.roundTimes.length === 0 ? (
-          <p>No rounds recorded.</p>
-        ) : (
-          player.roundTimes.map((roundTime) => (
-            <p key={roundTime.round}>
-              Round {roundTime.round}: {formatElapsedTime(roundTime.elapsedMs)}
-            </p>
-          ))
-        )}
-      </div>
-    </div>
   );
 }
 
@@ -207,22 +143,10 @@ export function ScreenRouter({ state, dispatch }: ScreenRouterProps) {
 
     case 'results':
       return (
-        <div className="space-y-5">
-          <p className="text-sm font-semibold uppercase tracking-normal text-hazard">
-            Results
-          </p>
-          <h2 className="text-3xl font-bold tracking-normal">
-            Match flow complete.
-          </h2>
-          <div className="grid gap-4 sm:grid-cols-2">
-            {getPlayerOrder().map((playerId) => (
-              <PlayerSummary key={playerId} state={state} playerId={playerId} />
-            ))}
-          </div>
-          <PrimaryButton onClick={() => dispatch({ type: 'restartMatch' })}>
-            Restart flow
-          </PrimaryButton>
-        </div>
+        <ResultsScreen
+          state={state}
+          onPlayAgain={() => dispatch({ type: 'restartMatch' })}
+        />
       );
   }
 }
