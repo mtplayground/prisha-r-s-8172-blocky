@@ -17,7 +17,7 @@ function getDirection({
   return left ? -1 : 1;
 }
 
-export function useArrowKeyMovement() {
+export function useArrowKeyMovement({ enabled = true } = {}) {
   const [playerX, setPlayerX] = useState(() =>
     clampPlayerX({
       x: INITIAL_PLAYER_X,
@@ -30,6 +30,12 @@ export function useArrowKeyMovement() {
   const lastFrameTimeRef = useRef<number | null>(null);
 
   useEffect(() => {
+    if (!enabled) {
+      heldKeysRef.current = { left: false, right: false };
+      lastFrameTimeRef.current = null;
+      return;
+    }
+
     function handleKeyDown(event: KeyboardEvent) {
       if (event.key === 'ArrowLeft') {
         event.preventDefault();
@@ -98,7 +104,7 @@ export function useArrowKeyMovement() {
         window.cancelAnimationFrame(animationFrameRef.current);
       }
     };
-  }, []);
+  }, [enabled]);
 
   return playerX;
 }

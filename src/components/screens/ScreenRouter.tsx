@@ -1,3 +1,4 @@
+import { useRef } from 'react';
 import type React from 'react';
 import {
   formatElapsedTime,
@@ -15,10 +16,6 @@ type ScreenRouterProps = {
 };
 
 const difficultyPreview = 'medium';
-
-function nextPlaceholderElapsedMs(state: MatchState): number {
-  return state.activePlayer * 10_000 + state.activeRound * 1_000;
-}
 
 function PrimaryButton({
   children,
@@ -85,6 +82,47 @@ function PlayerSummary({
   );
 }
 
+function PlayingScreen({
+  state,
+  activePlayerDifficulty,
+  dispatch,
+}: {
+  state: MatchState;
+  activePlayerDifficulty: string;
+  dispatch: React.Dispatch<GameAction>;
+}) {
+  const roundStartedAtRef = useRef(performance.now());
+
+  function completeCurrentRound() {
+    dispatch({
+      type: 'completeRound',
+      elapsedMs: performance.now() - roundStartedAtRef.current,
+    });
+  }
+
+  return (
+    <div className="space-y-5">
+      <div className="space-y-3">
+        <p className="text-sm font-semibold uppercase tracking-normal text-hazard">
+          Gameplay
+        </p>
+        <h2 className="text-3xl font-bold tracking-normal">
+          Player {state.activePlayer}, round {state.activeRound} of{' '}
+          {ROUND_COUNT}
+        </h2>
+        <p className="max-w-2xl text-lg leading-8 text-zinc-700">
+          The current route tracks the active player, active round, and selected
+          difficulty: {activePlayerDifficulty}.
+        </p>
+      </div>
+      <Playfield onCollision={completeCurrentRound} />
+      <PrimaryButton onClick={completeCurrentRound}>
+        Record round end
+      </PrimaryButton>
+    </div>
+  );
+}
+
 export function ScreenRouter({ state, dispatch }: ScreenRouterProps) {
   const activePlayer = getActivePlayer(state);
 
@@ -120,32 +158,11 @@ export function ScreenRouter({ state, dispatch }: ScreenRouterProps) {
 
     case 'playing':
       return (
-        <div className="space-y-5">
-          <div className="space-y-3">
-            <p className="text-sm font-semibold uppercase tracking-normal text-hazard">
-              Gameplay
-            </p>
-            <h2 className="text-3xl font-bold tracking-normal">
-              Player {state.activePlayer}, round {state.activeRound} of{' '}
-              {ROUND_COUNT}
-            </h2>
-            <p className="max-w-2xl text-lg leading-8 text-zinc-700">
-              The current route tracks the active player, active round, and
-              selected difficulty: {activePlayer.difficulty ?? 'pending'}.
-            </p>
-          </div>
-          <Playfield />
-          <PrimaryButton
-            onClick={() =>
-              dispatch({
-                type: 'completeRound',
-                elapsedMs: nextPlaceholderElapsedMs(state),
-              })
-            }
-          >
-            Record round end
-          </PrimaryButton>
-        </div>
+        <PlayingScreen
+          state={state}
+          activePlayerDifficulty={activePlayer.difficulty ?? 'pending'}
+          dispatch={dispatch}
+        />
       );
 
     case 'roundEnd':
