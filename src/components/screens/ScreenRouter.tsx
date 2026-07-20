@@ -6,6 +6,7 @@ import {
   type GameAction,
 } from '../../state/gameState';
 import { ROUND_COUNT, type MatchState, type PlayerId } from '../../types/game';
+import { Playfield } from '../game/Playfield';
 import { StartScreen } from './StartScreen';
 
 type ScreenRouterProps = {
@@ -120,17 +121,20 @@ export function ScreenRouter({ state, dispatch }: ScreenRouterProps) {
     case 'playing':
       return (
         <div className="space-y-5">
-          <p className="text-sm font-semibold uppercase tracking-normal text-hazard">
-            Gameplay
-          </p>
-          <h2 className="text-3xl font-bold tracking-normal">
-            Player {state.activePlayer}, round {state.activeRound} of{' '}
-            {ROUND_COUNT}
-          </h2>
-          <p className="max-w-2xl text-lg leading-8 text-zinc-700">
-            The current route tracks the active player, active round, and
-            selected difficulty: {activePlayer.difficulty ?? 'pending'}.
-          </p>
+          <div className="space-y-3">
+            <p className="text-sm font-semibold uppercase tracking-normal text-hazard">
+              Gameplay
+            </p>
+            <h2 className="text-3xl font-bold tracking-normal">
+              Player {state.activePlayer}, round {state.activeRound} of{' '}
+              {ROUND_COUNT}
+            </h2>
+            <p className="max-w-2xl text-lg leading-8 text-zinc-700">
+              The current route tracks the active player, active round, and
+              selected difficulty: {activePlayer.difficulty ?? 'pending'}.
+            </p>
+          </div>
+          <Playfield />
           <PrimaryButton
             onClick={() =>
               dispatch({
