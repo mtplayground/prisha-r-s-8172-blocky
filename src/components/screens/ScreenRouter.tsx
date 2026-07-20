@@ -9,6 +9,7 @@ import {
   type MatchState,
 } from '../../types/game';
 import { playGameOverSound } from '../../utils/gameOverEffect';
+import { InPlayHud } from '../game/InPlayHud';
 import { Playfield } from '../game/Playfield';
 import { SurvivalTimer } from '../game/SurvivalTimer';
 import { DifficultyScreen } from './DifficultyScreen';
@@ -114,7 +115,15 @@ function PlayingScreen({
           difficulty: {difficultyOption.label}.
         </p>
       </div>
-      <SurvivalTimer elapsedMs={elapsedMs} />
+      <div className="flex flex-wrap items-end justify-between gap-3">
+        <InPlayHud
+          playerId={state.activePlayer}
+          currentRound={state.activeRound}
+          totalRounds={ROUND_COUNT}
+          difficultyLabel={difficultyOption.label}
+        />
+        <SurvivalTimer elapsedMs={elapsedMs} />
+      </div>
       <Playfield
         difficulty={activePlayerDifficulty}
         isGameOver={isGameOverEffectVisible}
