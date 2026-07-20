@@ -1,9 +1,12 @@
 import { PLAYFIELD_CONFIG } from '../../config/playfield';
 import { useArrowKeyMovement } from '../../hooks/useArrowKeyMovement';
+import { useFallingBlocks } from '../../hooks/useFallingBlocks';
+import { FallingBlock } from './FallingBlock';
 import { PlayerBlock } from './PlayerBlock';
 
 export function Playfield() {
   const playerX = useArrowKeyMovement();
+  const fallingBlocks = useFallingBlocks();
   const playerY =
     PLAYFIELD_CONFIG.height -
     PLAYFIELD_CONFIG.blockSize -
@@ -23,6 +26,14 @@ export function Playfield() {
         aria-hidden="true"
         className="absolute inset-x-0 bottom-0 h-20 border-t border-line bg-panel/70"
       />
+      {fallingBlocks.map((block) => (
+        <FallingBlock
+          key={block.id}
+          block={block}
+          playfieldWidth={PLAYFIELD_CONFIG.width}
+          playfieldHeight={PLAYFIELD_CONFIG.height}
+        />
+      ))}
       <PlayerBlock
         x={playerX}
         y={playerY}
