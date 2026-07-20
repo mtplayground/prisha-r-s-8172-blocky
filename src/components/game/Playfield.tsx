@@ -1,19 +1,26 @@
 import { useEffect, useState } from 'react';
+import { getDifficultyTuning } from '../../config/difficulty';
 import { PLAYFIELD_CONFIG } from '../../config/playfield';
 import { useArrowKeyMovement } from '../../hooks/useArrowKeyMovement';
 import { useFallingBlocks } from '../../hooks/useFallingBlocks';
+import type { Difficulty } from '../../types/game';
 import { getBlockRectangle, hasPlayerCollision } from '../../utils/playfield';
 import { FallingBlock } from './FallingBlock';
 import { PlayerBlock } from './PlayerBlock';
 
 type PlayfieldProps = {
+  difficulty: Difficulty;
   onCollision: () => void;
 };
 
-export function Playfield({ onCollision }: PlayfieldProps) {
+export function Playfield({ difficulty, onCollision }: PlayfieldProps) {
   const [hasCollided, setHasCollided] = useState(false);
+  const difficultyTuning = getDifficultyTuning(difficulty);
   const playerX = useArrowKeyMovement({ enabled: !hasCollided });
-  const fallingBlocks = useFallingBlocks({ enabled: !hasCollided });
+  const fallingBlocks = useFallingBlocks({
+    enabled: !hasCollided,
+    tuning: difficultyTuning,
+  });
   const playerY =
     PLAYFIELD_CONFIG.height -
     PLAYFIELD_CONFIG.blockSize -
