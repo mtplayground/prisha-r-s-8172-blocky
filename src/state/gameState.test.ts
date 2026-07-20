@@ -4,15 +4,31 @@ import {
   formatElapsedTime,
   gameReducer,
   getActivePlayer,
+  getMatchResult,
   getPlayerBestRoundTime,
   getPlayerScoreMs,
 } from './gameState';
+import type { MatchState } from '../types/game';
 
 function chooseDefaultDifficulty(state = createInitialMatchState()) {
   return gameReducer(gameReducer(state, { type: 'beginMatch' }), {
     type: 'chooseDifficulty',
     difficulty: 'medium',
   });
+}
+
+function completeActivePlayerRounds(
+  state: MatchState,
+  roundTimes: number[],
+): MatchState {
+  return roundTimes.reduce((currentState, elapsedMs) => {
+    const roundEnd = gameReducer(currentState, {
+      type: 'completeRound',
+      elapsedMs,
+    });
+
+    return gameReducer(roundEnd, { type: 'continueAfterRound' });
+  }, state);
 }
 
 describe('gameReducer', () => {
@@ -138,6 +154,65 @@ describe('gameReducer', () => {
       elapsedMs: 5100,
     });
     expect(getPlayerScoreMs(state.players[1])).toBe(5100);
+  });
+
+  it('compares final scores and returns the player with the longer survival time', () => {
+    let state = chooseDefaultDifficulty();
+
+    state = completeActivePlayerRounds(state, [2400, 5100, 3700]);
+    state = gameReducer(state, { type: 'startNextPlayer' });
+    state = gameReducer(state, {
+      type: 'chooseDifficulty',
+      difficulty: 'easy',
+    });
+    state = completeActivePlayerRounds(state, [6200, 4100, 3900]);
+
+    expect(state.screen).toBe('results');
+    expect(getMatchResult(state)).toEqual({
+      status: 'winner',
+      winner: 2,
+      winningScoreMs: 6200,
+      marginMs: 1100,
+      playerScores: {
+        1: 5100,
+        2: 6200,
+      },
+    });
+  });
+
+  it('returns a tie when both players have the same best survival time', () => {
+    let state = chooseDefaultDifficulty();
+
+    state = completeActivePlayerRounds(state, [4000, 5000, 3000]);
+    state = gameReducer(state, { type: 'startNextPlayer' });
+    state = gameReducer(state, {
+      type: 'chooseDifficulty',
+      difficulty: 'hard',
+    });
+    state = completeActivePlayerRounds(state, [5000, 2500, 4200]);
+
+    expect(getMatchResult(state)).toEqual({
+      status: 'tie',
+      winner: null,
+      winningScoreMs: 5000,
+      playerScores: {
+        1: 5000,
+        2: 5000,
+      },
+    });
+  });
+
+  it('marks results incomplete until both players have a score', () => {
+    const state = chooseDefaultDifficulty();
+
+    expect(getMatchResult(state)).toEqual({
+      status: 'incomplete',
+      winner: null,
+      playerScores: {
+        1: null,
+        2: null,
+      },
+    });
   });
 
   it('ignores actions that do not match the current screen', () => {

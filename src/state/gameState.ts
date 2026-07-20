@@ -16,6 +16,26 @@ export type GameAction =
   | { type: 'startNextPlayer' }
   | { type: 'restartMatch' };
 
+export type MatchResult =
+  | {
+      status: 'incomplete';
+      winner: null;
+      playerScores: Record<PlayerId, number | null>;
+    }
+  | {
+      status: 'tie';
+      winner: null;
+      winningScoreMs: number;
+      playerScores: Record<PlayerId, number>;
+    }
+  | {
+      status: 'winner';
+      winner: PlayerId;
+      winningScoreMs: number;
+      marginMs: number;
+      playerScores: Record<PlayerId, number>;
+    };
+
 function createPlayerState(id: PlayerId): PlayerMatchState {
   return {
     id,
@@ -62,6 +82,47 @@ export function getPlayerBestRoundTime(
 
 export function getPlayerScoreMs(player: PlayerMatchState): number | null {
   return getPlayerBestRoundTime(player)?.elapsedMs ?? null;
+}
+
+export function getMatchResult(state: MatchState): MatchResult {
+  const playerOneScore = getPlayerScoreMs(state.players[1]);
+  const playerTwoScore = getPlayerScoreMs(state.players[2]);
+
+  if (playerOneScore === null || playerTwoScore === null) {
+    return {
+      status: 'incomplete',
+      winner: null,
+      playerScores: {
+        1: playerOneScore,
+        2: playerTwoScore,
+      },
+    };
+  }
+
+  const playerScores = {
+    1: playerOneScore,
+    2: playerTwoScore,
+  };
+
+  if (playerOneScore === playerTwoScore) {
+    return {
+      status: 'tie',
+      winner: null,
+      winningScoreMs: playerOneScore,
+      playerScores,
+    };
+  }
+
+  const winner = playerOneScore > playerTwoScore ? 1 : 2;
+  const loser = winner === 1 ? 2 : 1;
+
+  return {
+    status: 'winner',
+    winner,
+    winningScoreMs: playerScores[winner],
+    marginMs: playerScores[winner] - playerScores[loser],
+    playerScores,
+  };
 }
 
 export function formatElapsedTime(elapsedMs: number): string {
