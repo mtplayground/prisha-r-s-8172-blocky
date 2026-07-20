@@ -6,6 +6,9 @@ export const PLAYFIELD_CONFIG: PlayfieldConfig = {
   blockSize: 48,
   playerBottomOffset: 28,
   playerSpeed: 320,
+  fallingBlockSpeed: 150,
+  spawnIntervalMs: 900,
+  spawnLaneGap: 24,
 };
 
 export const INITIAL_PLAYER_X =
