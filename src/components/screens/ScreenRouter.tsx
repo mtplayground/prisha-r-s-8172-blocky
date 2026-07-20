@@ -6,6 +6,7 @@ import {
   type GameAction,
 } from '../../state/gameState';
 import { ROUND_COUNT, type MatchState, type PlayerId } from '../../types/game';
+import { StartScreen } from './StartScreen';
 
 type ScreenRouterProps = {
   state: MatchState;
@@ -88,23 +89,7 @@ export function ScreenRouter({ state, dispatch }: ScreenRouterProps) {
 
   switch (state.screen) {
     case 'start':
-      return (
-        <div className="space-y-5">
-          <p className="text-sm font-semibold uppercase tracking-normal text-hazard">
-            Start
-          </p>
-          <h2 className="text-4xl font-bold tracking-normal sm:text-5xl">
-            Match flow ready.
-          </h2>
-          <p className="max-w-2xl text-lg leading-8 text-zinc-700">
-            The in-memory router is set for two sequential players, three rounds
-            each, and a final results step.
-          </p>
-          <PrimaryButton onClick={() => dispatch({ type: 'beginMatch' })}>
-            Begin flow
-          </PrimaryButton>
-        </div>
-      );
+      return <StartScreen onBegin={() => dispatch({ type: 'beginMatch' })} />;
 
     case 'difficulty':
       return (
