@@ -33,9 +33,12 @@ export type PlayfieldConfig = {
   blockSize: number;
   playerBottomOffset: number;
   playerSpeed: number;
+  spawnLaneGap: number;
+};
+
+export type DifficultyTuning = {
   fallingBlockSpeed: number;
   spawnIntervalMs: number;
-  spawnLaneGap: number;
 };
 
 export type HorizontalDirection = -1 | 0 | 1;

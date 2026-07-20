@@ -1,5 +1,6 @@
 import { useCallback, useRef } from 'react';
 import type React from 'react';
+import { getDifficultyOption } from '../../config/difficulty';
 import { useSurvivalTimer } from '../../hooks/useSurvivalTimer';
 import {
   formatElapsedTime,
@@ -7,7 +8,12 @@ import {
   getPlayerOrder,
   type GameAction,
 } from '../../state/gameState';
-import { ROUND_COUNT, type MatchState, type PlayerId } from '../../types/game';
+import {
+  ROUND_COUNT,
+  type Difficulty,
+  type MatchState,
+  type PlayerId,
+} from '../../types/game';
 import { Playfield } from '../game/Playfield';
 import { SurvivalTimer } from '../game/SurvivalTimer';
 import { DifficultyScreen } from './DifficultyScreen';
@@ -89,11 +95,12 @@ function PlayingScreen({
   dispatch,
 }: {
   state: MatchState;
-  activePlayerDifficulty: string;
+  activePlayerDifficulty: Difficulty;
   dispatch: React.Dispatch<GameAction>;
 }) {
   const hasCompletedRoundRef = useRef(false);
   const { elapsedMs, stopTimer } = useSurvivalTimer();
+  const difficultyOption = getDifficultyOption(activePlayerDifficulty);
 
   const completeCurrentRound = useCallback(() => {
     if (hasCompletedRoundRef.current) {
@@ -121,11 +128,14 @@ function PlayingScreen({
         </h2>
         <p className="max-w-2xl text-lg leading-8 text-zinc-700">
           The current route tracks the active player, active round, and selected
-          difficulty: {activePlayerDifficulty}.
+          difficulty: {difficultyOption.label}.
         </p>
       </div>
       <SurvivalTimer elapsedMs={elapsedMs} />
-      <Playfield onCollision={completeCurrentRound} />
+      <Playfield
+        difficulty={activePlayerDifficulty}
+        onCollision={completeCurrentRound}
+      />
       <PrimaryButton onClick={completeCurrentRound}>
         Record round end
       </PrimaryButton>
@@ -154,7 +164,7 @@ export function ScreenRouter({ state, dispatch }: ScreenRouterProps) {
       return (
         <PlayingScreen
           state={state}
-          activePlayerDifficulty={activePlayer.difficulty ?? 'pending'}
+          activePlayerDifficulty={activePlayer.difficulty ?? 'medium'}
           dispatch={dispatch}
         />
       );

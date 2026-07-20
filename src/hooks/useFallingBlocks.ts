@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { PLAYFIELD_CONFIG } from '../config/playfield';
-import type { FallingBlockState } from '../types/game';
+import type { DifficultyTuning, FallingBlockState } from '../types/game';
 import {
   advanceFallingBlocks,
   chooseFallingBlockSpawnX,
@@ -8,7 +8,13 @@ import {
   getFallingBlockSpawnLanes,
 } from '../utils/playfield';
 
-export function useFallingBlocks({ enabled = true } = {}) {
+export function useFallingBlocks({
+  enabled = true,
+  tuning,
+}: {
+  enabled?: boolean;
+  tuning: DifficultyTuning;
+}) {
   const [blocks, setBlocks] = useState<FallingBlockState[]>([]);
   const animationFrameRef = useRef<number | null>(null);
   const lastFrameTimeRef = useRef<number | null>(null);
@@ -67,12 +73,12 @@ export function useFallingBlocks({ enabled = true } = {}) {
         let nextBlocks = advanceFallingBlocks({
           blocks: currentBlocks,
           deltaMs,
-          speed: PLAYFIELD_CONFIG.fallingBlockSpeed,
+          speed: tuning.fallingBlockSpeed,
           playfieldHeight: PLAYFIELD_CONFIG.height,
         });
 
-        if (spawnTimerRef.current >= PLAYFIELD_CONFIG.spawnIntervalMs) {
-          spawnTimerRef.current -= PLAYFIELD_CONFIG.spawnIntervalMs;
+        if (spawnTimerRef.current >= tuning.spawnIntervalMs) {
+          spawnTimerRef.current -= tuning.spawnIntervalMs;
           nextBlocks = spawnBlock(nextBlocks);
         }
 
@@ -92,7 +98,7 @@ export function useFallingBlocks({ enabled = true } = {}) {
         window.cancelAnimationFrame(animationFrameRef.current);
       }
     };
-  }, [enabled, lanes]);
+  }, [enabled, lanes, tuning]);
 
   return blocks;
 }
