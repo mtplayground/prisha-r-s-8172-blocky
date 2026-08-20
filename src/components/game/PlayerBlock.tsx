@@ -1,4 +1,7 @@
+import type { PlayerId } from '../../types/game';
+
 type PlayerBlockProps = {
+  playerId: PlayerId;
   x: number;
   y: number;
   size: number;
@@ -7,6 +10,7 @@ type PlayerBlockProps = {
 };
 
 export function PlayerBlock({
+  playerId,
   x,
   y,
   size,
@@ -15,8 +19,8 @@ export function PlayerBlock({
 }: PlayerBlockProps) {
   return (
     <div
-      aria-label="Player block"
-      className="absolute bg-player shadow-[0_0_0_2px_rgba(22,22,22,0.16)]"
+      aria-label={`Player ${playerId} block`}
+      className={`player-block player-block--player-${playerId} absolute`}
       style={{
         left: `${(x / playfieldWidth) * 100}%`,
         top: `${(y / playfieldHeight) * 100}%`,

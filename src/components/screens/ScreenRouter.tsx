@@ -126,6 +126,7 @@ function PlayingScreen({
       </div>
       <Playfield
         difficulty={activePlayerDifficulty}
+        playerId={state.activePlayer}
         isGameOver={isGameOverEffectVisible}
         onCollision={handleCollision}
       />

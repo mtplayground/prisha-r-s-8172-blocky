@@ -298,6 +298,74 @@ select {
   }
 }
 
+.falling-block {
+  animation: falling-block-enter 260ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  transform-origin: center top;
+  will-change: opacity, transform;
+}
+
+.player-block {
+  transition:
+    background-color 180ms ease,
+    box-shadow 180ms ease;
+}
+
+.player-block--player-1 {
+  background: #1b84ff;
+  box-shadow:
+    0 0 0 2px rgba(22, 22, 22, 0.22),
+    0 0 0 5px rgba(27, 132, 255, 0.22),
+    0 0.4rem 1rem rgba(27, 132, 255, 0.42);
+}
+
+.player-block--player-2 {
+  background: #7c3aed;
+  box-shadow:
+    0 0 0 2px rgba(22, 22, 22, 0.22),
+    0 0 0 5px rgba(124, 58, 237, 0.22),
+    0 0.4rem 1rem rgba(124, 58, 237, 0.42);
+}
+
+.hud-item--active-player {
+  border-color: var(--active-player-color);
+  background: var(--active-player-tint);
+  box-shadow: inset 0.25rem 0 0 var(--active-player-color);
+}
+
+.hud-item--active-player .hud-item__label {
+  color: var(--active-player-label);
+}
+
+.hud-item--player-1 {
+  --active-player-color: #1b84ff;
+  --active-player-tint: rgba(27, 132, 255, 0.12);
+  --active-player-label: #1262bd;
+}
+
+.hud-item--player-2 {
+  --active-player-color: #7c3aed;
+  --active-player-tint: rgba(124, 58, 237, 0.12);
+  --active-player-label: #5b21b6;
+}
+
+@keyframes falling-block-enter {
+  0% {
+    opacity: 0;
+    transform: scale(0.82);
+  }
+
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .falling-block {
+    animation: none;
+  }
+}
+
 .game-over-impact {
   animation: game-over-shake 420ms ease-out;
 }
