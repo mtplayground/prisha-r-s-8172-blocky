@@ -3,19 +3,21 @@ import { getDifficultyTuning } from '../../config/difficulty';
 import { PLAYFIELD_CONFIG } from '../../config/playfield';
 import { useArrowKeyMovement } from '../../hooks/useArrowKeyMovement';
 import { useFallingBlocks } from '../../hooks/useFallingBlocks';
-import type { Difficulty } from '../../types/game';
+import type { Difficulty, PlayerId } from '../../types/game';
 import { getBlockRectangle, hasPlayerCollision } from '../../utils/playfield';
 import { FallingBlock } from './FallingBlock';
 import { PlayerBlock } from './PlayerBlock';
 
 type PlayfieldProps = {
   difficulty: Difficulty;
+  playerId: PlayerId;
   isGameOver?: boolean;
   onCollision: () => void;
 };
 
 export function Playfield({
   difficulty,
+  playerId,
   isGameOver = false,
   onCollision,
 }: PlayfieldProps) {
@@ -79,6 +81,7 @@ export function Playfield({
         />
       ))}
       <PlayerBlock
+        playerId={playerId}
         x={playerX}
         y={playerY}
         size={PLAYFIELD_CONFIG.blockSize}
