@@ -55,6 +55,49 @@ function getResultDetail(result: ReturnType<typeof getMatchResult>) {
   return 'Both players need a completed round before a winner can be named.';
 }
 
+function ResultAnnouncement({
+  result,
+}: {
+  result: ReturnType<typeof getMatchResult>;
+}) {
+  const winnerClassName =
+    result.status === 'winner'
+      ? ` results-announcement--player-${result.winner}`
+      : '';
+
+  return (
+    <div
+      className={`results-announcement results-announcement--${result.status}${winnerClassName}`}
+    >
+      {result.status === 'winner' ? (
+        <div className="results-confetti" aria-hidden="true">
+          {Array.from({ length: 8 }, (_, index) => (
+            <span key={index} />
+          ))}
+        </div>
+      ) : null}
+      {result.status === 'tie' ? (
+        <div className="results-tie-markers" aria-hidden="true">
+          <span />
+          <span />
+          <span />
+        </div>
+      ) : null}
+      <div className="results-announcement__content space-y-3">
+        <p className="text-sm font-semibold uppercase tracking-normal text-hazard">
+          Final results
+        </p>
+        <h2 className="text-3xl font-bold tracking-normal">
+          {getAnnouncement(result)}
+        </h2>
+        <p className="max-w-2xl text-lg leading-8 text-zinc-700">
+          {getResultDetail(result)}
+        </p>
+      </div>
+    </div>
+  );
+}
+
 function PlayerResultCard({
   state,
   playerId,
@@ -117,17 +160,7 @@ export function ResultsScreen({ state, onPlayAgain }: ResultsScreenProps) {
 
   return (
     <div className="space-y-6">
-      <div className="space-y-3">
-        <p className="text-sm font-semibold uppercase tracking-normal text-hazard">
-          Final results
-        </p>
-        <h2 className="text-3xl font-bold tracking-normal">
-          {getAnnouncement(result)}
-        </h2>
-        <p className="max-w-2xl text-lg leading-8 text-zinc-700">
-          {getResultDetail(result)}
-        </p>
-      </div>
+      <ResultAnnouncement result={result} />
 
       <div className="grid gap-4 sm:grid-cols-2">
         {getPlayerOrder().map((playerId) => (
