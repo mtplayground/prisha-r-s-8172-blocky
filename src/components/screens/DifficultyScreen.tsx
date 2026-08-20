@@ -1,5 +1,8 @@
+import { useEffect, useRef, useState } from 'react';
 import { DIFFICULTY_OPTIONS } from '../../config/difficulty';
 import type { Difficulty, PlayerId } from '../../types/game';
+
+const SELECTION_DELAY_MS = 420;
 
 type DifficultyScreenProps = {
   playerId: PlayerId;
@@ -10,6 +13,29 @@ export function DifficultyScreen({
   playerId,
   onChooseDifficulty,
 }: DifficultyScreenProps) {
+  const [selectedDifficulty, setSelectedDifficulty] =
+    useState<Difficulty | null>(null);
+  const selectionTimerRef = useRef<number | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (selectionTimerRef.current !== null) {
+        window.clearTimeout(selectionTimerRef.current);
+      }
+    };
+  }, []);
+
+  function handleChooseDifficulty(difficulty: Difficulty) {
+    if (selectedDifficulty !== null) {
+      return;
+    }
+
+    setSelectedDifficulty(difficulty);
+    selectionTimerRef.current = window.setTimeout(() => {
+      onChooseDifficulty(difficulty);
+    }, SELECTION_DELAY_MS);
+  }
+
   return (
     <div className="space-y-6">
       <div className="space-y-3">
@@ -26,22 +52,31 @@ export function DifficultyScreen({
       </div>
 
       <div className="grid gap-3 sm:grid-cols-3">
-        {DIFFICULTY_OPTIONS.map((option) => (
-          <button
-            key={option.value}
-            type="button"
-            onClick={() => onChooseDifficulty(option.value)}
-            className="min-h-32 border border-line bg-white p-4 text-left transition hover:border-ink hover:bg-panel focus:outline-none focus:ring-4 focus:ring-player/30"
-            aria-label={`Choose ${option.label} difficulty`}
-          >
-            <span className="block text-lg font-bold text-ink">
-              {option.label}
-            </span>
-            <span className="mt-2 block text-sm leading-6 text-zinc-700">
-              {option.description}
-            </span>
-          </button>
-        ))}
+        {DIFFICULTY_OPTIONS.map((option) => {
+          const isSelected = selectedDifficulty === option.value;
+
+          return (
+            <button
+              key={option.value}
+              type="button"
+              onClick={() => handleChooseDifficulty(option.value)}
+              className={`difficulty-card ${
+                isSelected ? 'difficulty-card--selected' : ''
+              }`}
+              aria-label={`Choose ${option.label} difficulty`}
+              aria-pressed={isSelected}
+              disabled={selectedDifficulty !== null}
+            >
+              <span className="difficulty-card__title">{option.label}</span>
+              <span className="difficulty-card__description">
+                {option.description}
+              </span>
+              <span className="difficulty-card__selected" aria-hidden="true">
+                Locked in
+              </span>
+            </button>
+          );
+        })}
       </div>
     </div>
   );
