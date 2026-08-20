@@ -30,6 +30,44 @@ select {
   font: inherit;
 }
 
+.primary-button {
+  position: relative;
+  isolation: isolate;
+  border: 1px solid #161616;
+  background: #161616;
+  color: #ffffff;
+  cursor: pointer;
+  touch-action: manipulation;
+  transition:
+    background-color 160ms ease,
+    box-shadow 160ms ease,
+    transform 160ms ease;
+}
+
+.primary-button:hover:not(:disabled) {
+  background: #27272a;
+  box-shadow: 0 0.5rem 0.85rem rgba(22, 22, 22, 0.2);
+  transform: translateY(-0.125rem);
+}
+
+.primary-button:focus-visible {
+  z-index: 1;
+  outline: 3px solid #1b84ff;
+  outline-offset: 3px;
+  box-shadow: 0 0 0 5px rgba(27, 132, 255, 0.22);
+}
+
+.primary-button:active:not(:disabled) {
+  background: #09090b;
+  box-shadow: 0 0.15rem 0.35rem rgba(22, 22, 22, 0.22);
+  transform: translateY(0.1rem) scale(0.98);
+}
+
+.primary-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.58;
+}
+
 .start-motif {
   position: relative;
   min-height: 13rem;
@@ -177,6 +215,10 @@ select {
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .primary-button {
+    transition: none;
+  }
+
   .start-motif::after,
   .start-motif__block,
   .start-motif__player {

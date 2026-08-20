@@ -9,6 +9,7 @@ export default {
         panel: '#f7f7f4',
         line: '#dedbd2',
         player: '#1b84ff',
+        focus: '#1b84ff',
         hazard: '#e5484d',
       },
       fontFamily: {

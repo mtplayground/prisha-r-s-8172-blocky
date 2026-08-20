@@ -60,7 +60,7 @@ export function StartScreen({ onBegin }: StartScreenProps) {
       <button
         type="button"
         onClick={onBegin}
-        className="rounded border border-ink bg-ink px-5 py-3 text-base font-semibold text-white transition hover:bg-zinc-800 focus:outline-none focus:ring-4 focus:ring-player/30"
+        className="primary-button rounded px-5 py-3 text-base font-semibold"
       >
         Begin
       </button>

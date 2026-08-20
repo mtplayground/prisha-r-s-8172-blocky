@@ -34,7 +34,7 @@ function PrimaryButton({
     <button
       type="button"
       onClick={onClick}
-      className="w-fit rounded border border-ink bg-ink px-4 py-2 text-sm font-semibold text-white transition hover:bg-zinc-800 focus:outline-none focus:ring-4 focus:ring-player/30"
+      className="primary-button w-fit rounded px-4 py-2 text-sm font-semibold"
     >
       {children}
     </button>
