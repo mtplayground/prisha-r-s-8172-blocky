@@ -30,6 +30,172 @@ select {
   font: inherit;
 }
 
+.start-motif {
+  position: relative;
+  min-height: 13rem;
+  overflow: hidden;
+  border: 2px solid #161616;
+  background:
+    linear-gradient(180deg, rgba(27, 132, 255, 0.08), transparent 58%), #ffffff;
+  box-shadow: inset 0 -3.25rem 0 #f7f7f4;
+}
+
+.start-motif::before,
+.start-motif::after {
+  position: absolute;
+  content: '';
+}
+
+.start-motif::before {
+  inset: 0;
+  background-image: linear-gradient(
+    rgba(22, 22, 22, 0.06) 1px,
+    transparent 1px
+  );
+  background-size: 100% 2.5rem;
+}
+
+.start-motif::after {
+  top: 0.75rem;
+  left: 0.75rem;
+  width: 2.1rem;
+  height: 0.3rem;
+  background: #e5484d;
+  box-shadow:
+    2.8rem 0.65rem 0 #1b84ff,
+    6.4rem -0.2rem 0 #e5484d;
+  animation: start-motif-sparkle 3.2s ease-in-out infinite;
+}
+
+.start-motif__lane {
+  position: absolute;
+  top: 0;
+  bottom: 3.25rem;
+  width: 1px;
+  background: rgba(22, 22, 22, 0.1);
+}
+
+.start-motif__lane--one {
+  left: 25%;
+}
+
+.start-motif__lane--two {
+  left: 50%;
+}
+
+.start-motif__lane--three {
+  left: 75%;
+}
+
+.start-motif__block,
+.start-motif__player {
+  position: absolute;
+  display: block;
+  width: 2.35rem;
+  aspect-ratio: 1;
+  box-shadow: 0 0 0 2px rgba(22, 22, 22, 0.14);
+}
+
+.start-motif__block {
+  top: -3rem;
+  background: #e5484d;
+  animation: start-motif-fall 3.4s cubic-bezier(0.42, 0, 0.2, 1) infinite;
+}
+
+.start-motif__block--one {
+  left: calc(25% - 1.175rem);
+  animation-delay: -0.6s;
+}
+
+.start-motif__block--two {
+  left: calc(50% - 1.175rem);
+  animation-delay: -1.75s;
+}
+
+.start-motif__block--three {
+  left: calc(75% - 1.175rem);
+  animation-delay: -2.8s;
+}
+
+.start-motif__player {
+  bottom: 1.05rem;
+  left: calc(50% - 1.175rem);
+  z-index: 2;
+  background: #1b84ff;
+  animation: start-motif-drift 2.8s ease-in-out infinite alternate;
+}
+
+.start-motif__ground {
+  position: absolute;
+  right: 0;
+  bottom: 3.1rem;
+  left: 0;
+  height: 2px;
+  background: #161616;
+}
+
+@keyframes start-motif-fall {
+  0% {
+    transform: translateY(0) rotate(0deg);
+  }
+
+  77% {
+    opacity: 1;
+  }
+
+  90% {
+    opacity: 0;
+  }
+
+  100% {
+    transform: translateY(13rem) rotate(18deg);
+    opacity: 0;
+  }
+}
+
+@keyframes start-motif-drift {
+  0% {
+    transform: translateX(-5.8rem) rotate(-5deg);
+  }
+
+  100% {
+    transform: translateX(5.8rem) rotate(5deg);
+  }
+}
+
+@keyframes start-motif-sparkle {
+  0%,
+  100% {
+    opacity: 0.45;
+    transform: translateY(0);
+  }
+
+  50% {
+    opacity: 1;
+    transform: translateY(0.35rem);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .start-motif::after,
+  .start-motif__block,
+  .start-motif__player {
+    animation: none;
+  }
+
+  .start-motif__block--one {
+    top: 2.5rem;
+  }
+
+  .start-motif__block--two {
+    top: 5.25rem;
+  }
+
+  .start-motif__block--three {
+    top: 1.5rem;
+  }
+}
+
 .game-over-impact {
   animation: game-over-shake 420ms ease-out;
 }

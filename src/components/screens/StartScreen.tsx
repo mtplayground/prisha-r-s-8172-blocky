@@ -20,16 +20,30 @@ const instructionItems = [
 export function StartScreen({ onBegin }: StartScreenProps) {
   return (
     <div className="space-y-7">
-      <div className="space-y-4">
-        <p className="text-sm font-semibold uppercase tracking-normal text-hazard">
-          Welcome
-        </p>
-        <h2 className="text-5xl font-bold tracking-normal sm:text-6xl">
-          Blocky
-        </h2>
-        <p className="max-w-2xl text-lg leading-8 text-zinc-700">
-          Stay alive by keeping your block clear of anything falling from above.
-        </p>
+      <div className="grid gap-6 lg:grid-cols-[1fr_17rem] lg:items-center">
+        <div className="space-y-4">
+          <p className="text-sm font-semibold uppercase tracking-normal text-hazard">
+            Welcome
+          </p>
+          <h2 className="text-5xl font-bold tracking-normal sm:text-6xl">
+            Blocky
+          </h2>
+          <p className="max-w-2xl text-lg leading-8 text-zinc-700">
+            Stay alive by keeping your block clear of anything falling from
+            above.
+          </p>
+        </div>
+
+        <div className="start-motif" aria-hidden="true" role="presentation">
+          <div className="start-motif__lane start-motif__lane--one" />
+          <div className="start-motif__lane start-motif__lane--two" />
+          <div className="start-motif__lane start-motif__lane--three" />
+          <span className="start-motif__block start-motif__block--one" />
+          <span className="start-motif__block start-motif__block--two" />
+          <span className="start-motif__block start-motif__block--three" />
+          <span className="start-motif__player" />
+          <span className="start-motif__ground" />
+        </div>
       </div>
 
       <div className="grid gap-3 sm:grid-cols-3">
