@@ -1,38 +1,42 @@
-# Blocky Architecture Plan
+# Blocky Motion, Match UI, and Round Controls Plan
 
-## App Shape
-- Build a browser-only React + Tailwind single-page app. No backend, database, auth, or persistence is needed; match and round state lives in memory for one shared-device session.
-- Use Vite for local development and bundling, with TypeScript for shared game types and predictable state transitions.
-- Keep keyboard focus on the app/playfield so left/right arrow controls work immediately during gameplay.
+## Current Architecture
 
-## Module Structure
-- `src/main.tsx`: React entry point and global styles import.
-- `src/App.tsx`: top-level shell, screen routing, and wiring between state/actions and screen components.
-- `src/state/gameState.ts`: in-memory reducer/state machine for screen flow, active player, round index, difficulty selections, round results, and restart.
-- `src/types/game.ts`: shared types such as `PlayerId`, `Difficulty`, `Screen`, `RoundResult`, `MatchState`, `GameConfig`, and block/player geometry.
-- `src/config/difficulty.ts`: Easy/Medium/Hard gameplay tuning for falling block speed, spawn frequency, and any fairness limits.
-- `src/components/screens/`: `StartScreen`, `DifficultyScreen`, `PlayScreen`, `RoundEndScreen`, `HandoffScreen`, `ResultsScreen`.
-- `src/components/game/`: `Playfield`, `PlayerBlock`, `FallingBlock`, `Hud`, and optional `GameOverFeedback`.
-- `src/hooks/`: `useKeyboardControls`, `useGameLoop`, `useFallingBlocks`, and `useSurvivalTimer`.
-- `src/utils/`: collision math, random spawn helpers, timer formatting, and winner scoring.
-- `src/__tests__/` or `tests/`: unit tests for reducer/scoring/collision and an end-to-end test for the complete two-player flow.
+- The app is a browser-only React + TypeScript game built with Vite and Tailwind. Match data remains in memory for a shared-device session; no backend, database, auth, or persistence is required for these issues.
+- `src/App.tsx` owns the focused application shell and match reducer. `src/components/screens/ScreenRouter.tsx` selects the active screen and composes gameplay-specific hooks and components.
+- `src/state/gameState.ts` is the match-flow state machine. It already owns player turn, round number, difficulty, recorded round times, and results. New control state must remain reducer-owned so restart and pause transitions are deterministic and testable.
+- `src/components/game/` contains visual game primitives and HUD: `Playfield`, `PlayerBlock`, `FallingBlock`, `SurvivalTimer`, and `InPlayHud`. `src/hooks/` owns animation-frame loops and input; `src/styles.css` contains reusable keyframes and reduced-motion rules.
 
-## Issue Dependencies
-- Issue #1 establishes the React + Tailwind scaffold, dev tooling, base app shell, and `.env.example`.
-- Issue #2 creates the state machine and screen router used by all later screens.
-- Issue #3 fills the start/instructions screen for `Blocky`.
-- Issues #4-#8 build the single-round gameplay loop: playfield, player movement, falling blocks, collision-triggered round end, and survival timer.
-- Issues #9-#10 add per-player difficulty selection and apply selected tuning to all three of that player's rounds.
-- Issues #11-#14 complete the match loop: round-end screen, best-of-3 scoring, player handoff, final results, winner comparison, and play-again reset.
-- Issues #15-#16 polish gameplay feedback with collision sound/animation and in-play player/round HUD.
-- Issue #17 verifies the full flow end to end: start, player 1 difficulty, three rounds, handoff, player 2 difficulty, three rounds, final winner.
+## Planned Module Structure
+
+- `src/components/ui/PrimaryButton.tsx` (introduced by #39): one shared primary-button component with semantic variants, disabled state, focus ring, hover, and pressed feedback. Existing screen buttons and the new in-round controls use it.
+- `src/components/game/MatchScoreboard.tsx` (introduced by #40): replaces the static right panel in `App.tsx`; derives live turn, difficulty, completed rounds, best time, and match progress from `MatchState`.
+- `src/components/game/RoundControls.tsx` (introduced by #42): pause/resume and restart-round controls displayed only during a playable round. It receives `isPaused`, `onPauseToggle`, and `onRestartRound` from `PlayingScreen`.
+- `src/components/game/` continues to own motion-local elements: the falling-block entry state lives in `FallingBlock`, active-player emphasis in `PlayerBlock`/`InPlayHud`, and paused presentation in `Playfield`.
+- `src/components/screens/` continues to own screen-specific motion: start motif in `StartScreen`, selected-card transition in `DifficultyScreen`, winner celebration in `ResultsScreen`, and player-friendly copy in all screens.
+- `src/hooks/useSurvivalTimer.ts`, `useFallingBlocks.ts`, and `useArrowKeyMovement.ts` gain a consistent `enabled`/paused gate. A paused round must preserve timer elapsed time, block positions, and player position without generating delayed catch-up movement after resume.
+- `src/types/game.ts` adds a minimal `RoundStatus`/`isPaused` representation only if reducer state must persist it across `PlayingScreen` remounts. Keep transient visual animation state local to components.
+- `src/state/gameState.ts` adds explicit pause/resume and restart-current-round actions. Restarting a round clears only the current in-progress round and returns it to a fresh playable state; it must not alter completed times, selected difficulty, active player, or the round number.
+- Tests remain colocated: reducer tests in `src/state/gameState.test.ts`, hook or component tests beside the affected module, and the full flow regression in `src/state/fullPlaythrough.e2e.test.ts`.
+
+## Issue Dependency Map
+
+1. #35 Start-screen block motif is isolated to `StartScreen` and shared keyframes.
+2. #36 Difficulty-card selection animation is isolated to `DifficultyScreen`, but should use the shared motion tokens introduced with #35.
+3. #37 Falling-block entrance and active-player color build on existing `FallingBlock`, `PlayerBlock`, `InPlayHud`, and global motion utilities.
+4. #38 Winner celebration builds on `ResultsScreen` and existing `getMatchResult`; it must explicitly preserve the tie presentation.
+5. #39 Primary-button hover/pressed states should land before #42 so new controls inherit the same accessible interaction behavior.
+6. #40 Live scoreboard reads existing `MatchState` and should replace the static panel in `App.tsx` without changing game flow.
+7. #41 Player-friendly copy can be implemented independently, but should follow #40 so scoreboard labels and screen labels are updated together.
+8. #42 Pause/restart depends on #39 and touches reducer actions, `PlayingScreen`, all three real-time hooks, playfield visuals, and score preservation.
+9. #43 depends on #42 and verifies pause freezes every loop, resume continues from the same elapsed time/positions, and restart resets only the current round.
 
 ## Key Design Decisions
-- Model navigation as explicit screen state instead of URL routes because the game is a short in-memory flow with no deep linking requirement.
-- Use a reducer/action model for match state so round transitions, scoring, and restart behavior remain testable independently of React rendering.
-- Keep gameplay geometry in CSS pixels within a bounded playfield and clamp player/block movement inside those bounds.
-- Use `requestAnimationFrame` for movement, falling blocks, collision checks, and timer updates; pause/freeze the loop immediately on collision.
-- Represent difficulty as config data rather than branching throughout gameplay code.
-- Determine the winner from each player's longest recorded round time; ties should be handled explicitly in results logic.
-- Keep random spawning fair by enforcing reasonable block sizes, spawn intervals, horizontal bounds, and cleanup after blocks leave the playfield.
-- Add focused unit tests for state transitions, scoring, and collision math before relying on the end-to-end playthrough.
+
+- Use CSS keyframes and transforms for decorative and entrance motion. They are inexpensive, easy to respect under `prefers-reduced-motion`, and do not interfere with the requestAnimationFrame gameplay model.
+- Mark animation-only overlays as `aria-hidden`; preserve meaningful text labels and button states for assistive technology. Respect `prefers-reduced-motion: reduce` by shortening or disabling nonessential movement.
+- Use semantic data attributes or narrowly named classes for selected difficulty, active player, winner, and paused state. This keeps animation styling explicit and supports durable tests without coupling to presentation details.
+- Treat pause as a single source of truth passed to every game loop. On pause, cancel frame scheduling and retain state; on resume, reset each loop's last-frame timestamp to avoid a large elapsed delta.
+- Treat restart as a current-round reset, not a match reset. It resets only the in-flight timer, player position, falling blocks, collision visual state, and pause state; difficulty and previously recorded round results remain unchanged.
+- Keep winner celebration conditional on `MatchResult.status === 'winner'`; ties receive an equal, non-celebratory results state.
+- Keep all player-facing wording concise and action-led. Remove route, screen, focus, and developer terminology from visible UI while retaining useful accessible labels.
