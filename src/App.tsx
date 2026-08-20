@@ -21,7 +21,7 @@ function App() {
         <header className="flex items-center justify-between border-b border-line pb-4">
           <h1 className="text-2xl font-bold tracking-normal">{appTitle}</h1>
           <span className="rounded border border-line bg-white px-3 py-1 text-sm font-medium">
-            Browser app
+            Two-player challenge
           </span>
         </header>
 
