@@ -10,15 +10,20 @@ import {
 
 export function useFallingBlocks({
   enabled = true,
+  paused = false,
   tuning,
 }: {
   enabled?: boolean;
+  paused?: boolean;
   tuning: DifficultyTuning;
 }) {
   const [blocks, setBlocks] = useState<FallingBlockState[]>([]);
+  const { fallingBlockSpeed, spawnIntervalMs } = tuning;
   const animationFrameRef = useRef<number | null>(null);
   const lastFrameTimeRef = useRef<number | null>(null);
-  const spawnTimerRef = useRef(0);
+  const spawnTimeoutRef = useRef<number | null>(null);
+  const spawnStartedAtRef = useRef<number | null>(null);
+  const scheduledSpawnDelayRef = useRef(spawnIntervalMs);
   const previousSpawnXRef = useRef<number | null>(null);
   const nextBlockIdRef = useRef(1);
   const lanes = useMemo(
@@ -32,13 +37,50 @@ export function useFallingBlocks({
   );
 
   useEffect(() => {
-    if (!enabled) {
+    if (!enabled || paused) {
       lastFrameTimeRef.current = null;
-      spawnTimerRef.current = 0;
       return;
     }
 
-    function spawnBlock(currentBlocks: FallingBlockState[]) {
+    function tick(frameTime: number) {
+      const previousFrameTime = lastFrameTimeRef.current ?? frameTime;
+      const deltaMs = Math.min(Math.max(0, frameTime - previousFrameTime), 50);
+      lastFrameTimeRef.current = frameTime;
+
+      setBlocks((currentBlocks) =>
+        advanceFallingBlocks({
+          blocks: currentBlocks,
+          deltaMs,
+          speed: fallingBlockSpeed,
+          playfieldHeight: PLAYFIELD_CONFIG.height,
+        }),
+      );
+
+      animationFrameRef.current = window.requestAnimationFrame(tick);
+    }
+
+    animationFrameRef.current = window.requestAnimationFrame(tick);
+
+    return () => {
+      if (animationFrameRef.current !== null) {
+        window.cancelAnimationFrame(animationFrameRef.current);
+        animationFrameRef.current = null;
+      }
+    };
+  }, [enabled, fallingBlockSpeed, paused]);
+
+  useEffect(() => {
+    if (!enabled) {
+      scheduledSpawnDelayRef.current = spawnIntervalMs;
+      spawnStartedAtRef.current = null;
+      return;
+    }
+
+    if (paused) {
+      return;
+    }
+
+    function spawnBlock() {
       const x = chooseFallingBlockSpawnX({
         lanes,
         previousX: previousSpawnXRef.current,
@@ -46,59 +88,46 @@ export function useFallingBlocks({
       });
       previousSpawnXRef.current = x;
 
-      return [
+      setBlocks((currentBlocks) => [
         ...currentBlocks,
         createFallingBlock({
           id: nextBlockIdRef.current++,
           x,
           size: PLAYFIELD_CONFIG.blockSize,
         }),
-      ];
+      ]);
     }
 
-    function handleVisibilityChange() {
-      if (document.hidden) {
-        lastFrameTimeRef.current = null;
-        spawnTimerRef.current = 0;
-      }
+    function scheduleSpawn(delayMs: number) {
+      scheduledSpawnDelayRef.current = delayMs;
+      spawnStartedAtRef.current = performance.now();
+      spawnTimeoutRef.current = window.setTimeout(() => {
+        spawnBlock();
+        scheduleSpawn(spawnIntervalMs);
+      }, delayMs);
     }
 
-    function tick(frameTime: number) {
-      const previousFrameTime = lastFrameTimeRef.current ?? frameTime;
-      const deltaMs = Math.min(frameTime - previousFrameTime, 50);
-      lastFrameTimeRef.current = frameTime;
-      spawnTimerRef.current += deltaMs;
-
-      setBlocks((currentBlocks) => {
-        let nextBlocks = advanceFallingBlocks({
-          blocks: currentBlocks,
-          deltaMs,
-          speed: tuning.fallingBlockSpeed,
-          playfieldHeight: PLAYFIELD_CONFIG.height,
-        });
-
-        if (spawnTimerRef.current >= tuning.spawnIntervalMs) {
-          spawnTimerRef.current -= tuning.spawnIntervalMs;
-          nextBlocks = spawnBlock(nextBlocks);
-        }
-
-        return nextBlocks;
-      });
-
-      animationFrameRef.current = window.requestAnimationFrame(tick);
-    }
-
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-    animationFrameRef.current = window.requestAnimationFrame(tick);
+    scheduleSpawn(scheduledSpawnDelayRef.current);
 
     return () => {
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      if (spawnTimeoutRef.current !== null) {
+        window.clearTimeout(spawnTimeoutRef.current);
+        spawnTimeoutRef.current = null;
+      }
 
-      if (animationFrameRef.current !== null) {
-        window.cancelAnimationFrame(animationFrameRef.current);
+      if (spawnStartedAtRef.current !== null) {
+        const elapsedMs = Math.max(
+          0,
+          performance.now() - spawnStartedAtRef.current,
+        );
+        scheduledSpawnDelayRef.current = Math.max(
+          0,
+          scheduledSpawnDelayRef.current - elapsedMs,
+        );
+        spawnStartedAtRef.current = null;
       }
     };
-  }, [enabled, lanes, tuning]);
+  }, [enabled, lanes, paused, spawnIntervalMs]);
 
   return blocks;
 }

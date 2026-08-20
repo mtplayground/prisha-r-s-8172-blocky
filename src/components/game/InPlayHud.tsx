@@ -5,6 +5,7 @@ type InPlayHudProps = {
   currentRound: number;
   totalRounds: number;
   difficultyLabel: string;
+  isPaused: boolean;
 };
 
 function HudItem({
@@ -33,10 +34,11 @@ export function InPlayHud({
   currentRound,
   totalRounds,
   difficultyLabel,
+  isPaused,
 }: InPlayHudProps) {
   return (
     <div
-      aria-label={`Player ${playerId}, round ${currentRound} of ${totalRounds}, ${difficultyLabel} level`}
+      aria-label={`Player ${playerId}, round ${currentRound} of ${totalRounds}, ${difficultyLabel} level, ${isPaused ? 'paused' : 'playing'}`}
       className="flex flex-wrap gap-2"
     >
       <HudItem
@@ -47,6 +49,7 @@ export function InPlayHud({
       <HudItem label="Round" value={`${currentRound} of ${totalRounds}`} />
       <HudItem label="Level" value={difficultyLabel} />
       <HudItem label="Controls" value="Move with ← →" />
+      <HudItem label="Status" value={isPaused ? 'Paused' : 'Playing'} />
     </div>
   );
 }

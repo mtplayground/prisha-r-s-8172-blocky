@@ -11,6 +11,9 @@ import {
 export type GameAction =
   | { type: 'beginMatch' }
   | { type: 'chooseDifficulty'; difficulty: Difficulty }
+  | { type: 'pauseRound' }
+  | { type: 'resumeRound' }
+  | { type: 'restartCurrentRound' }
   | { type: 'completeRound'; elapsedMs: number }
   | { type: 'continueAfterRound' }
   | { type: 'startNextPlayer' }
@@ -49,6 +52,8 @@ export function createInitialMatchState(): MatchState {
     screen: 'start',
     activePlayer: 1,
     activeRound: 1,
+    isPaused: false,
+    roundSessionId: 0,
     players: {
       1: createPlayerState(1),
       2: createPlayerState(2),
@@ -148,6 +153,7 @@ function recordRound(state: MatchState, elapsedMs: number): MatchState {
   return {
     ...state,
     screen: 'roundEnd',
+    isPaused: false,
     lastRoundTime: roundTime,
     players: {
       ...state.players,
@@ -167,6 +173,8 @@ function continueAfterRound(state: MatchState): MatchState {
       ...state,
       screen: 'playing',
       activeRound: activePlayer.roundTimes.length + 1,
+      isPaused: false,
+      roundSessionId: state.roundSessionId + 1,
       lastRoundTime: null,
     };
   }
@@ -201,6 +209,8 @@ export function gameReducer(state: MatchState, action: GameAction): MatchState {
       return {
         ...state,
         screen: 'playing',
+        isPaused: false,
+        roundSessionId: state.roundSessionId + 1,
         players: {
           ...state.players,
           [state.activePlayer]: {
@@ -210,8 +220,27 @@ export function gameReducer(state: MatchState, action: GameAction): MatchState {
         },
       };
 
-    case 'completeRound':
+    case 'pauseRound':
+      return state.screen === 'playing' && !state.isPaused
+        ? { ...state, isPaused: true }
+        : state;
+
+    case 'resumeRound':
+      return state.screen === 'playing' && state.isPaused
+        ? { ...state, isPaused: false }
+        : state;
+
+    case 'restartCurrentRound':
       return state.screen === 'playing'
+        ? {
+            ...state,
+            isPaused: false,
+            roundSessionId: state.roundSessionId + 1,
+          }
+        : state;
+
+    case 'completeRound':
+      return state.screen === 'playing' && !state.isPaused
         ? recordRound(state, action.elapsedMs)
         : state;
 
@@ -225,6 +254,7 @@ export function gameReducer(state: MatchState, action: GameAction): MatchState {
             screen: 'difficulty',
             activePlayer: 2,
             activeRound: 1,
+            isPaused: false,
             lastRoundTime: null,
           }
         : state;

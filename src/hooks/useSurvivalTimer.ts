@@ -1,16 +1,16 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 
-export function useSurvivalTimer({ enabled = true } = {}) {
-  const startTimeRef = useRef(performance.now());
+export function useSurvivalTimer({ enabled = true, paused = false } = {}) {
   const animationFrameRef = useRef<number | null>(null);
+  const lastFrameTimeRef = useRef<number | null>(null);
   const elapsedMsRef = useRef(0);
   const [elapsedMs, setElapsedMs] = useState(0);
-  const [isRunning, setIsRunning] = useState(enabled);
+  const [isRunning, setIsRunning] = useState(enabled && !paused);
+  const isStoppedRef = useRef(!enabled);
 
   const stopTimer = useCallback(() => {
-    const elapsed = Math.max(0, performance.now() - startTimeRef.current);
-    elapsedMsRef.current = elapsed;
-    setElapsedMs(elapsed);
+    isStoppedRef.current = true;
+    lastFrameTimeRef.current = null;
     setIsRunning(false);
 
     if (animationFrameRef.current !== null) {
@@ -18,7 +18,7 @@ export function useSurvivalTimer({ enabled = true } = {}) {
       animationFrameRef.current = null;
     }
 
-    return elapsed;
+    return elapsedMsRef.current;
   }, []);
 
   useEffect(() => {
@@ -27,14 +27,20 @@ export function useSurvivalTimer({ enabled = true } = {}) {
       return;
     }
 
-    if (!isRunning) {
+    if (paused || isStoppedRef.current) {
+      lastFrameTimeRef.current = null;
+      setIsRunning(false);
       return;
     }
 
-    function tick() {
-      const elapsed = Math.max(0, performance.now() - startTimeRef.current);
-      elapsedMsRef.current = elapsed;
-      setElapsedMs(elapsed);
+    setIsRunning(true);
+
+    function tick(frameTime: number) {
+      const previousFrameTime = lastFrameTimeRef.current ?? frameTime;
+      const deltaMs = Math.max(0, frameTime - previousFrameTime);
+      lastFrameTimeRef.current = frameTime;
+      elapsedMsRef.current += deltaMs;
+      setElapsedMs(elapsedMsRef.current);
       animationFrameRef.current = window.requestAnimationFrame(tick);
     }
 
@@ -46,7 +52,7 @@ export function useSurvivalTimer({ enabled = true } = {}) {
         animationFrameRef.current = null;
       }
     };
-  }, [enabled, isRunning, stopTimer]);
+  }, [enabled, paused, stopTimer]);
 
   return {
     elapsedMs,
