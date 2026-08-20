@@ -23,6 +23,8 @@ export type MatchState = {
   screen: GameScreen;
   activePlayer: PlayerId;
   activeRound: number;
+  isPaused: boolean;
+  roundSessionId: number;
   players: Record<PlayerId, PlayerMatchState>;
   lastRoundTime: RoundTime | null;
 };

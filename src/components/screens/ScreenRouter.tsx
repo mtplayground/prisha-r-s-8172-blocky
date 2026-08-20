@@ -26,14 +26,17 @@ type ScreenRouterProps = {
 function PrimaryButton({
   children,
   onClick,
+  disabled = false,
 }: {
   children: React.ReactNode;
   onClick: () => void;
+  disabled?: boolean;
 }) {
   return (
     <button
       type="button"
       onClick={onClick}
+      disabled={disabled}
       className="primary-button w-fit rounded px-4 py-2 text-sm font-semibold"
     >
       {children}
@@ -53,7 +56,9 @@ function PlayingScreen({
   const hasCompletedRoundRef = useRef(false);
   const roundEndDelayRef = useRef<number | null>(null);
   const [isGameOverEffectVisible, setIsGameOverEffectVisible] = useState(false);
-  const { elapsedMs, stopTimer } = useSurvivalTimer();
+  const { elapsedMs, stopTimer } = useSurvivalTimer({
+    paused: state.isPaused,
+  });
   const difficultyOption = getDifficultyOption(activePlayerDifficulty);
 
   useEffect(() => {
@@ -66,7 +71,7 @@ function PlayingScreen({
 
   const completeCurrentRound = useCallback(
     ({ showGameOverEffect = false } = {}) => {
-      if (hasCompletedRoundRef.current) {
+      if (hasCompletedRoundRef.current || state.isPaused) {
         return;
       }
 
@@ -89,7 +94,7 @@ function PlayingScreen({
 
       dispatchRoundEnd();
     },
-    [dispatch, stopTimer],
+    [dispatch, state.isPaused, stopTimer],
   );
 
   const handleCollision = useCallback(() => {
@@ -121,18 +126,36 @@ function PlayingScreen({
           currentRound={state.activeRound}
           totalRounds={ROUND_COUNT}
           difficultyLabel={difficultyOption.label}
+          isPaused={state.isPaused}
         />
         <SurvivalTimer elapsedMs={elapsedMs} />
       </div>
       <Playfield
         difficulty={activePlayerDifficulty}
         playerId={state.activePlayer}
+        isPaused={state.isPaused}
         isGameOver={isGameOverEffectVisible}
         onCollision={handleCollision}
       />
-      <PrimaryButton onClick={handleManualRoundEnd}>
-        End this round
-      </PrimaryButton>
+      <div className="flex flex-wrap gap-3">
+        <PrimaryButton
+          onClick={() =>
+            dispatch({ type: state.isPaused ? 'resumeRound' : 'pauseRound' })
+          }
+        >
+          {state.isPaused ? 'Resume round' : 'Pause round'}
+        </PrimaryButton>
+        <button
+          type="button"
+          onClick={() => dispatch({ type: 'restartCurrentRound' })}
+          className="rounded border border-ink bg-white px-4 py-2 text-sm font-semibold text-ink transition hover:bg-panel focus-visible:outline focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-player active:translate-y-px"
+        >
+          Restart round
+        </button>
+        <PrimaryButton onClick={handleManualRoundEnd} disabled={state.isPaused}>
+          End this round
+        </PrimaryButton>
+      </div>
     </div>
   );
 }
@@ -157,6 +180,7 @@ export function ScreenRouter({ state, dispatch }: ScreenRouterProps) {
     case 'playing':
       return (
         <PlayingScreen
+          key={state.roundSessionId}
           state={state}
           activePlayerDifficulty={activePlayer.difficulty ?? 'medium'}
           dispatch={dispatch}

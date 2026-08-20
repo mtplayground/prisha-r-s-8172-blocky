@@ -11,6 +11,7 @@ import { PlayerBlock } from './PlayerBlock';
 type PlayfieldProps = {
   difficulty: Difficulty;
   playerId: PlayerId;
+  isPaused: boolean;
   isGameOver?: boolean;
   onCollision: () => void;
 };
@@ -18,14 +19,19 @@ type PlayfieldProps = {
 export function Playfield({
   difficulty,
   playerId,
+  isPaused,
   isGameOver = false,
   onCollision,
 }: PlayfieldProps) {
   const [hasCollided, setHasCollided] = useState(false);
   const difficultyTuning = getDifficultyTuning(difficulty);
-  const playerX = useArrowKeyMovement({ enabled: !hasCollided });
+  const playerX = useArrowKeyMovement({
+    enabled: !hasCollided,
+    paused: isPaused,
+  });
   const fallingBlocks = useFallingBlocks({
     enabled: !hasCollided,
+    paused: isPaused,
     tuning: difficultyTuning,
   });
   const playerY =
@@ -34,7 +40,7 @@ export function Playfield({
     PLAYFIELD_CONFIG.playerBottomOffset;
 
   useEffect(() => {
-    if (hasCollided) {
+    if (hasCollided || isPaused) {
       return;
     }
 
@@ -48,7 +54,7 @@ export function Playfield({
       setHasCollided(true);
       onCollision();
     }
-  }, [fallingBlocks, hasCollided, onCollision, playerX, playerY]);
+  }, [fallingBlocks, hasCollided, isPaused, onCollision, playerX, playerY]);
 
   return (
     <div
@@ -71,6 +77,17 @@ export function Playfield({
           aria-hidden="true"
           className="game-over-flash pointer-events-none absolute inset-0 z-20 border-4 border-hazard bg-hazard/10"
         />
+      ) : null}
+      {isPaused ? (
+        <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-ink/80 px-6 text-center text-white">
+          <p className="text-sm font-semibold uppercase tracking-normal text-player">
+            Paused
+          </p>
+          <p className="mt-2 text-2xl font-bold">Take a breath.</p>
+          <p className="mt-2 max-w-xs text-sm leading-6 text-zinc-200">
+            Your time and every block will wait here until you resume.
+          </p>
+        </div>
       ) : null}
       {fallingBlocks.map((block) => (
         <FallingBlock
