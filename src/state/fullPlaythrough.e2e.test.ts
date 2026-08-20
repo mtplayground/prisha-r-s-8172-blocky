@@ -70,6 +70,29 @@ function completeRoundByCollision({
   return roundEnd;
 }
 
+function pauseAndRestartCurrentRound(state: MatchState): MatchState {
+  const pausedState = gameReducer(state, { type: 'pauseRound' });
+
+  expect(pausedState.isPaused).toBe(true);
+  expect(
+    gameReducer(pausedState, { type: 'completeRound', elapsedMs: 9_000 }),
+  ).toBe(pausedState);
+
+  const resumedState = gameReducer(pausedState, { type: 'resumeRound' });
+  const restartedState = gameReducer(resumedState, {
+    type: 'restartCurrentRound',
+  });
+
+  expect(restartedState.screen).toBe('playing');
+  expect(restartedState.activePlayer).toBe(state.activePlayer);
+  expect(restartedState.activeRound).toBe(state.activeRound);
+  expect(restartedState.isPaused).toBe(false);
+  expect(restartedState.players).toEqual(state.players);
+  expect(restartedState.roundSessionId).toBe(state.roundSessionId + 1);
+
+  return restartedState;
+}
+
 function completePlayerSet({
   state,
   playerId,
@@ -208,6 +231,38 @@ describe('full two-player playthrough', () => {
       expect(getMatchResult(finalState).winner).toBe(winner);
     },
   );
+
+  it('keeps the correct winner when pause and restart are used mid-match', () => {
+    let state = beginMatchForPlayerOne('hard');
+    state = pauseAndRestartCurrentRound(state);
+    state = completePlayerSet({
+      state,
+      playerId: 1,
+      roundTimes: [1_500, 4_300, 2_700],
+    });
+
+    expect(state.screen).toBe('handoff');
+    state = gameReducer(state, { type: 'startNextPlayer' });
+    state = gameReducer(state, {
+      type: 'chooseDifficulty',
+      difficulty: 'easy',
+    });
+    state = pauseAndRestartCurrentRound(state);
+    state = completePlayerSet({
+      state,
+      playerId: 2,
+      roundTimes: [2_100, 5_100, 3_800],
+    });
+
+    expect(state.screen).toBe('results');
+    expect(getMatchResult(state)).toEqual({
+      status: 'winner',
+      winner: 2,
+      winningScoreMs: 5_100,
+      marginMs: 800,
+      playerScores: { 1: 4_300, 2: 5_100 },
+    });
+  });
 
   it('keeps left and right keyboard movement responsive and clamped', () => {
     const startingX = PLAYFIELD_CONFIG.width / 2;
