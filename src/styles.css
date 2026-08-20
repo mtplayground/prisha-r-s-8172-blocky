@@ -196,6 +196,108 @@ select {
   }
 }
 
+.difficulty-card {
+  position: relative;
+  min-height: 8rem;
+  overflow: hidden;
+  border: 1px solid #dedbd2;
+  background: #ffffff;
+  padding: 1rem;
+  color: #161616;
+  text-align: left;
+  transition:
+    border-color 180ms ease,
+    box-shadow 180ms ease,
+    background-color 180ms ease,
+    transform 180ms ease;
+}
+
+.difficulty-card:hover:not(:disabled) {
+  border-color: #1b84ff;
+  background: #f7f7f4;
+  box-shadow: 0 0.7rem 1.25rem rgba(22, 22, 22, 0.12);
+  transform: translateY(-0.25rem);
+}
+
+.difficulty-card:focus-visible {
+  z-index: 1;
+  outline: 0;
+  box-shadow: 0 0 0 4px rgba(27, 132, 255, 0.3);
+}
+
+.difficulty-card:active:not(:disabled) {
+  box-shadow: 0 0.25rem 0.5rem rgba(22, 22, 22, 0.12);
+  transform: translateY(0.05rem) scale(0.98);
+}
+
+.difficulty-card:disabled:not(.difficulty-card--selected) {
+  cursor: wait;
+  opacity: 0.58;
+}
+
+.difficulty-card--selected {
+  z-index: 1;
+  border-color: #1b84ff;
+  background: linear-gradient(135deg, rgba(27, 132, 255, 0.18), #ffffff 68%);
+  box-shadow: 0 0 0 3px rgba(27, 132, 255, 0.22);
+  animation: difficulty-card-lock 420ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.difficulty-card__title,
+.difficulty-card__description,
+.difficulty-card__selected {
+  display: block;
+}
+
+.difficulty-card__title {
+  font-size: 1.125rem;
+  font-weight: 700;
+}
+
+.difficulty-card__description {
+  margin-top: 0.5rem;
+  color: #52525b;
+  font-size: 0.875rem;
+  line-height: 1.5rem;
+}
+
+.difficulty-card__selected {
+  margin-top: 0.75rem;
+  color: #1262bd;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.difficulty-card:not(.difficulty-card--selected) .difficulty-card__selected {
+  display: none;
+}
+
+@keyframes difficulty-card-lock {
+  0% {
+    transform: scale(1);
+  }
+
+  45% {
+    transform: scale(1.045);
+  }
+
+  100% {
+    transform: scale(1.02);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .difficulty-card {
+    transition: none;
+  }
+
+  .difficulty-card--selected {
+    animation: none;
+  }
+}
+
 .game-over-impact {
   animation: game-over-shake 420ms ease-out;
 }
