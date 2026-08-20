@@ -46,6 +46,7 @@ export function InPlayHud({
       />
       <HudItem label="Round" value={`${currentRound} of ${totalRounds}`} />
       <HudItem label="Level" value={difficultyLabel} />
+      <HudItem label="Controls" value="Move with ← →" />
     </div>
   );
 }

@@ -104,15 +104,15 @@ function PlayingScreen({
     <div className="space-y-5">
       <div className="space-y-3">
         <p className="text-sm font-semibold uppercase tracking-normal text-hazard">
-          Gameplay
+          Stay moving
         </p>
         <h2 className="text-3xl font-bold tracking-normal">
           Player {state.activePlayer}, round {state.activeRound} of{' '}
           {ROUND_COUNT}
         </h2>
         <p className="max-w-2xl text-lg leading-8 text-zinc-700">
-          The current route tracks the active player, active round, and selected
-          difficulty: {difficultyOption.label}.
+          You&apos;re playing on {difficultyOption.label}. Dodge the falling
+          blocks and keep your block safe for as long as you can.
         </p>
       </div>
       <div className="flex flex-wrap items-end justify-between gap-3">
@@ -131,7 +131,7 @@ function PlayingScreen({
         onCollision={handleCollision}
       />
       <PrimaryButton onClick={handleManualRoundEnd}>
-        Record round end
+        End this round
       </PrimaryButton>
     </div>
   );
