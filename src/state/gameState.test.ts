@@ -215,6 +215,52 @@ describe('gameReducer', () => {
     });
   });
 
+  it('does not record paused time and records only the resumed survival time', () => {
+    const playingState = chooseDefaultDifficulty();
+    const pausedState = gameReducer(playingState, { type: 'pauseRound' });
+
+    expect(pausedState.isPaused).toBe(true);
+    expect(
+      gameReducer(pausedState, { type: 'completeRound', elapsedMs: 9_000 }),
+    ).toBe(pausedState);
+
+    const resumedState = gameReducer(pausedState, { type: 'resumeRound' });
+    const endedState = gameReducer(resumedState, {
+      type: 'completeRound',
+      elapsedMs: 1_450,
+    });
+
+    expect(endedState.players[1].roundTimes).toEqual([
+      { round: 1, elapsedMs: 1_450 },
+    ]);
+    expect(endedState.lastRoundTime).toEqual({ round: 1, elapsedMs: 1_450 });
+  });
+
+  it('restarts only the current round while preserving match progress', () => {
+    let state = chooseDefaultDifficulty();
+    state = gameReducer(state, { type: 'completeRound', elapsedMs: 1_250 });
+    state = gameReducer(state, { type: 'continueAfterRound' });
+
+    const pausedState = gameReducer(state, { type: 'pauseRound' });
+    const restartedState = gameReducer(pausedState, {
+      type: 'restartCurrentRound',
+    });
+
+    expect(restartedState).toMatchObject({
+      screen: 'playing',
+      activePlayer: 1,
+      activeRound: 2,
+      isPaused: false,
+      players: {
+        1: {
+          difficulty: 'medium',
+          roundTimes: [{ round: 1, elapsedMs: 1_250 }],
+        },
+      },
+    });
+    expect(restartedState.roundSessionId).toBe(pausedState.roundSessionId + 1);
+  });
+
   it('ignores actions that do not match the current screen', () => {
     const state = createInitialMatchState();
 
