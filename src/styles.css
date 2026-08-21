@@ -4,6 +4,22 @@
 
 :root {
   color-scheme: light;
+  --arcade-ink: #21164a;
+  --arcade-ink-soft: #514379;
+  --arcade-ink-deep: #150d35;
+  --arcade-panel: #f4efff;
+  --arcade-surface: #ffffff;
+  --arcade-line: #d9ccff;
+  --arcade-violet: #7838e7;
+  --arcade-violet-deep: #5421b6;
+  --arcade-blue: #1677ff;
+  --arcade-blue-deep: #075bcf;
+  --arcade-cyan: #05c8ff;
+  --arcade-pink: #ff3ea5;
+  --arcade-hazard: #ff4f64;
+  --arcade-lime: #a3e635;
+  --arcade-yellow: #ffd23f;
+  --arcade-orange: #ff8c42;
   font-family:
     Inter,
     ui-sans-serif,
@@ -21,6 +37,8 @@
 body {
   margin: 0;
   min-width: 320px;
+  background: var(--arcade-panel);
+  color: var(--arcade-ink);
 }
 
 button,
@@ -33,9 +51,9 @@ select {
 .primary-button {
   position: relative;
   isolation: isolate;
-  border: 1px solid #161616;
-  background: #161616;
-  color: #ffffff;
+  border: 1px solid var(--arcade-ink-deep);
+  background: var(--arcade-violet);
+  color: var(--arcade-surface);
   cursor: pointer;
   touch-action: manipulation;
   transition:
@@ -45,21 +63,21 @@ select {
 }
 
 .primary-button:hover:not(:disabled) {
-  background: #27272a;
-  box-shadow: 0 0.5rem 0.85rem rgba(22, 22, 22, 0.2);
+  background: var(--arcade-violet-deep);
+  box-shadow: 0 0.5rem 0.85rem rgba(84, 33, 182, 0.28);
   transform: translateY(-0.125rem);
 }
 
 .primary-button:focus-visible {
   z-index: 1;
-  outline: 3px solid #1b84ff;
+  outline: 3px solid var(--arcade-pink);
   outline-offset: 3px;
-  box-shadow: 0 0 0 5px rgba(27, 132, 255, 0.22);
+  box-shadow: 0 0 0 5px rgba(255, 62, 165, 0.26);
 }
 
 .primary-button:active:not(:disabled) {
-  background: #09090b;
-  box-shadow: 0 0.15rem 0.35rem rgba(22, 22, 22, 0.22);
+  background: var(--arcade-ink-deep);
+  box-shadow: 0 0.15rem 0.35rem rgba(33, 22, 74, 0.28);
   transform: translateY(0.1rem) scale(0.98);
 }
 
@@ -68,14 +86,61 @@ select {
   opacity: 0.58;
 }
 
+.arcade-shell {
+  background:
+    radial-gradient(
+      circle at 5% 7%,
+      rgba(5, 200, 255, 0.24),
+      transparent 24rem
+    ),
+    radial-gradient(
+      circle at 94% 9%,
+      rgba(255, 62, 165, 0.2),
+      transparent 22rem
+    ),
+    linear-gradient(145deg, #f9f6ff 0%, var(--arcade-panel) 52%, #e2f8ff 100%);
+}
+
+.arcade-header {
+  border-color: rgba(255, 255, 255, 0.42);
+  background: linear-gradient(
+    105deg,
+    var(--arcade-violet),
+    var(--arcade-blue) 58%,
+    var(--arcade-blue-deep)
+  );
+  box-shadow:
+    inset -0.35rem 0 var(--arcade-cyan),
+    0 0.85rem 1.75rem rgba(84, 33, 182, 0.22);
+  color: var(--arcade-surface);
+}
+
+.arcade-match-badge {
+  border-color: rgba(255, 255, 255, 0.62);
+  background: rgba(255, 255, 255, 0.9);
+  color: var(--arcade-ink);
+}
+
+.arcade-surface {
+  background:
+    linear-gradient(
+      125deg,
+      rgba(255, 255, 255, 0.98),
+      rgba(250, 247, 255, 0.98)
+    ),
+    var(--arcade-surface);
+  box-shadow: 0 1.25rem 2.5rem rgba(84, 33, 182, 0.14);
+}
+
 .start-motif {
   position: relative;
   min-height: 13rem;
   overflow: hidden;
-  border: 2px solid #161616;
+  border: 2px solid var(--arcade-ink);
   background:
-    linear-gradient(180deg, rgba(27, 132, 255, 0.08), transparent 58%), #ffffff;
-  box-shadow: inset 0 -3.25rem 0 #f7f7f4;
+    linear-gradient(180deg, rgba(5, 200, 255, 0.22), transparent 58%),
+    var(--arcade-surface);
+  box-shadow: inset 0 -3.25rem 0 var(--arcade-panel);
 }
 
 .start-motif::before,
@@ -87,7 +152,7 @@ select {
 .start-motif::before {
   inset: 0;
   background-image: linear-gradient(
-    rgba(22, 22, 22, 0.06) 1px,
+    rgba(33, 22, 74, 0.08) 1px,
     transparent 1px
   );
   background-size: 100% 2.5rem;
@@ -98,10 +163,10 @@ select {
   left: 0.75rem;
   width: 2.1rem;
   height: 0.3rem;
-  background: #e5484d;
+  background: var(--arcade-pink);
   box-shadow:
-    2.8rem 0.65rem 0 #1b84ff,
-    6.4rem -0.2rem 0 #e5484d;
+    2.8rem 0.65rem 0 var(--arcade-cyan),
+    6.4rem -0.2rem 0 var(--arcade-yellow);
   animation: start-motif-sparkle 3.2s ease-in-out infinite;
 }
 
@@ -110,7 +175,7 @@ select {
   top: 0;
   bottom: 3.25rem;
   width: 1px;
-  background: rgba(22, 22, 22, 0.1);
+  background: rgba(33, 22, 74, 0.14);
 }
 
 .start-motif__lane--one {
@@ -131,12 +196,12 @@ select {
   display: block;
   width: 2.35rem;
   aspect-ratio: 1;
-  box-shadow: 0 0 0 2px rgba(22, 22, 22, 0.14);
+  box-shadow: 0 0 0 2px rgba(33, 22, 74, 0.16);
 }
 
 .start-motif__block {
   top: -3rem;
-  background: #e5484d;
+  background: var(--arcade-orange);
   animation: start-motif-fall 3.4s cubic-bezier(0.42, 0, 0.2, 1) infinite;
 }
 
@@ -159,7 +224,7 @@ select {
   bottom: 1.05rem;
   left: calc(50% - 1.175rem);
   z-index: 2;
-  background: #1b84ff;
+  background: var(--arcade-blue);
   animation: start-motif-drift 2.8s ease-in-out infinite alternate;
 }
 
@@ -169,7 +234,7 @@ select {
   bottom: 3.1rem;
   left: 0;
   height: 2px;
-  background: #161616;
+  background: var(--arcade-ink);
 }
 
 @keyframes start-motif-fall {
@@ -242,10 +307,10 @@ select {
   position: relative;
   min-height: 8rem;
   overflow: hidden;
-  border: 1px solid #dedbd2;
-  background: #ffffff;
+  border: 1px solid var(--arcade-line);
+  background: var(--arcade-surface);
   padding: 1rem;
-  color: #161616;
+  color: var(--arcade-ink);
   text-align: left;
   transition:
     border-color 180ms ease,
@@ -255,20 +320,20 @@ select {
 }
 
 .difficulty-card:hover:not(:disabled) {
-  border-color: #1b84ff;
-  background: #f7f7f4;
-  box-shadow: 0 0.7rem 1.25rem rgba(22, 22, 22, 0.12);
+  border-color: var(--arcade-cyan);
+  background: #f8f5ff;
+  box-shadow: 0 0.7rem 1.25rem rgba(120, 56, 231, 0.18);
   transform: translateY(-0.25rem);
 }
 
 .difficulty-card:focus-visible {
   z-index: 1;
   outline: 0;
-  box-shadow: 0 0 0 4px rgba(27, 132, 255, 0.3);
+  box-shadow: 0 0 0 4px rgba(255, 62, 165, 0.3);
 }
 
 .difficulty-card:active:not(:disabled) {
-  box-shadow: 0 0.25rem 0.5rem rgba(22, 22, 22, 0.12);
+  box-shadow: 0 0.25rem 0.5rem rgba(84, 33, 182, 0.18);
   transform: translateY(0.05rem) scale(0.98);
 }
 
@@ -279,9 +344,13 @@ select {
 
 .difficulty-card--selected {
   z-index: 1;
-  border-color: #1b84ff;
-  background: linear-gradient(135deg, rgba(27, 132, 255, 0.18), #ffffff 68%);
-  box-shadow: 0 0 0 3px rgba(27, 132, 255, 0.22);
+  border-color: var(--arcade-violet);
+  background: linear-gradient(
+    135deg,
+    rgba(120, 56, 231, 0.18),
+    var(--arcade-surface) 68%
+  );
+  box-shadow: 0 0 0 3px rgba(120, 56, 231, 0.22);
   animation: difficulty-card-lock 420ms cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
@@ -298,14 +367,14 @@ select {
 
 .difficulty-card__description {
   margin-top: 0.5rem;
-  color: #52525b;
+  color: var(--arcade-ink-soft);
   font-size: 0.875rem;
   line-height: 1.5rem;
 }
 
 .difficulty-card__selected {
   margin-top: 0.75rem;
-  color: #1262bd;
+  color: var(--arcade-blue-deep);
   font-size: 0.75rem;
   font-weight: 700;
   letter-spacing: 0.05em;
@@ -353,19 +422,19 @@ select {
 }
 
 .player-block--player-1 {
-  background: #1b84ff;
+  background: var(--arcade-blue);
   box-shadow:
-    0 0 0 2px rgba(22, 22, 22, 0.22),
-    0 0 0 5px rgba(27, 132, 255, 0.22),
-    0 0.4rem 1rem rgba(27, 132, 255, 0.42);
+    0 0 0 2px rgba(33, 22, 74, 0.22),
+    0 0 0 5px rgba(22, 119, 255, 0.24),
+    0 0.4rem 1rem rgba(22, 119, 255, 0.42);
 }
 
 .player-block--player-2 {
-  background: #7c3aed;
+  background: var(--arcade-violet);
   box-shadow:
-    0 0 0 2px rgba(22, 22, 22, 0.22),
-    0 0 0 5px rgba(124, 58, 237, 0.22),
-    0 0.4rem 1rem rgba(124, 58, 237, 0.42);
+    0 0 0 2px rgba(33, 22, 74, 0.22),
+    0 0 0 5px rgba(120, 56, 231, 0.24),
+    0 0.4rem 1rem rgba(120, 56, 231, 0.42);
 }
 
 .hud-item--active-player {
@@ -379,15 +448,15 @@ select {
 }
 
 .hud-item--player-1 {
-  --active-player-color: #1b84ff;
-  --active-player-tint: rgba(27, 132, 255, 0.12);
-  --active-player-label: #1262bd;
+  --active-player-color: var(--arcade-blue);
+  --active-player-tint: rgba(22, 119, 255, 0.12);
+  --active-player-label: var(--arcade-blue-deep);
 }
 
 .hud-item--player-2 {
-  --active-player-color: #7c3aed;
-  --active-player-tint: rgba(124, 58, 237, 0.12);
-  --active-player-label: #5b21b6;
+  --active-player-color: var(--arcade-violet);
+  --active-player-tint: rgba(120, 56, 231, 0.12);
+  --active-player-label: var(--arcade-violet-deep);
 }
 
 @keyframes falling-block-enter {
@@ -411,8 +480,8 @@ select {
 .results-announcement {
   position: relative;
   overflow: hidden;
-  border: 1px solid #dedbd2;
-  background: #ffffff;
+  border: 1px solid var(--arcade-line);
+  background: var(--arcade-surface);
   padding: 1.5rem;
 }
 
@@ -423,20 +492,20 @@ select {
 }
 
 .results-announcement--player-1 {
-  --results-accent: #1b84ff;
-  --results-tint: rgba(27, 132, 255, 0.15);
-  --results-outline: rgba(27, 132, 255, 0.2);
+  --results-accent: var(--arcade-blue);
+  --results-tint: rgba(22, 119, 255, 0.15);
+  --results-outline: rgba(22, 119, 255, 0.2);
 }
 
 .results-announcement--player-2 {
-  --results-accent: #7c3aed;
-  --results-tint: rgba(124, 58, 237, 0.15);
-  --results-outline: rgba(124, 58, 237, 0.2);
+  --results-accent: var(--arcade-violet);
+  --results-tint: rgba(120, 56, 231, 0.15);
+  --results-outline: rgba(120, 56, 231, 0.2);
 }
 
 .results-announcement--tie {
-  border-color: #a1a1aa;
-  background: linear-gradient(135deg, #f4f4f5, #ffffff 64%);
+  border-color: var(--arcade-cyan);
+  background: linear-gradient(135deg, #e2f8ff, var(--arcade-surface) 64%);
 }
 
 .results-announcement__content {
@@ -465,11 +534,11 @@ select {
 }
 
 .results-confetti span:nth-child(2n) {
-  background: #e5484d;
+  background: var(--arcade-pink);
 }
 
 .results-confetti span:nth-child(3n) {
-  background: #f4b740;
+  background: var(--arcade-yellow);
 }
 
 .results-confetti span:nth-child(1) {
@@ -537,7 +606,7 @@ select {
 .results-tie-markers span {
   width: 2.5rem;
   height: 0.35rem;
-  background: #a1a1aa;
+  background: var(--arcade-cyan);
   animation: results-tie-pulse 900ms ease-out both;
 }
 
