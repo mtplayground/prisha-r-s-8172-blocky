@@ -211,6 +211,62 @@ describe('full two-player playthrough', () => {
     });
   });
 
+  it('starts a fresh match after exit and uses only its new survival times', () => {
+    let state = beginMatchForPlayerOne('hard');
+    state = gameReducer(state, { type: 'completeRound', elapsedMs: 9_900 });
+
+    expect(state).toMatchObject({
+      screen: 'roundEnd',
+      players: {
+        1: {
+          difficulty: 'hard',
+          roundTimes: [{ round: 1, elapsedMs: 9_900 }],
+        },
+      },
+    });
+
+    state = gameReducer(state, { type: 'exitMatch' });
+    expect(state).toEqual(createInitialMatchState());
+
+    state = gameReducer(state, { type: 'beginMatch' });
+    state = gameReducer(state, {
+      type: 'chooseDifficulty',
+      difficulty: 'easy',
+    });
+    state = completeTurnByCollision({
+      state,
+      elapsedMs: 1_800,
+      expectedPlayer: 1,
+    });
+    state = gameReducer(state, { type: 'startNextPlayer' });
+    state = gameReducer(state, {
+      type: 'chooseDifficulty',
+      difficulty: 'medium',
+    });
+    state = completeTurnByCollision({
+      state,
+      elapsedMs: 2_600,
+      expectedPlayer: 2,
+    });
+
+    expect(state).toMatchObject({ screen: 'results', activePlayer: 2 });
+    expect(state.players[1]).toMatchObject({
+      difficulty: 'easy',
+      roundTimes: [{ round: 1, elapsedMs: 1_800 }],
+    });
+    expect(state.players[2]).toMatchObject({
+      difficulty: 'medium',
+      roundTimes: [{ round: 1, elapsedMs: 2_600 }],
+    });
+    expect(getMatchResult(state)).toEqual({
+      status: 'winner',
+      winner: 2,
+      winningScoreMs: 2_600,
+      marginMs: 800,
+      playerScores: { 1: 1_800, 2: 2_600 },
+    });
+  });
+
   it('keeps left and right keyboard movement responsive and clamped', () => {
     const startingX = PLAYFIELD_CONFIG.width / 2;
     const deltaMs = 120;
