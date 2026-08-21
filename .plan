@@ -1,42 +1,35 @@
-# Blocky Motion, Match UI, and Round Controls Plan
+# Blocky Single-Round Match and Exit Controls Plan
 
 ## Current Architecture
 
-- The app is a browser-only React + TypeScript game built with Vite and Tailwind. Match data remains in memory for a shared-device session; no backend, database, auth, or persistence is required for these issues.
-- `src/App.tsx` owns the focused application shell and match reducer. `src/components/screens/ScreenRouter.tsx` selects the active screen and composes gameplay-specific hooks and components.
-- `src/state/gameState.ts` is the match-flow state machine. It already owns player turn, round number, difficulty, recorded round times, and results. New control state must remain reducer-owned so restart and pause transitions are deterministic and testable.
-- `src/components/game/` contains visual game primitives and HUD: `Playfield`, `PlayerBlock`, `FallingBlock`, `SurvivalTimer`, and `InPlayHud`. `src/hooks/` owns animation-frame loops and input; `src/styles.css` contains reusable keyframes and reduced-motion rules.
+- Blocky is a browser-only React + TypeScript game built with Vite and Tailwind. Match state is in-memory and reducer-owned; these issues require no server, authentication, storage, database, or schema changes.
+- `src/App.tsx` owns `useReducer(gameReducer, ...)`, passes the canonical `MatchState` to `ScreenRouter`, and renders the live `MatchProgressPanel` beside every active screen.
+- `src/state/gameState.ts` is the single match-flow authority. It owns active player, active round, pause/restart session state, selected difficulty, recorded times, handoff, results, and winner calculation. `ROUND_COUNT` in `src/types/game.ts` drives all completion checks.
+- `src/components/screens/ScreenRouter.tsx` composes the gameplay hooks, playfield, timer, HUD, and screen actions. The start, difficulty, round-end, handoff, and results views are separate components under `src/components/screens/`.
+- Reducer coverage is in `src/state/gameState.test.ts`; complete two-player journeys are exercised by `src/state/fullPlaythrough.e2e.test.ts`.
 
 ## Planned Module Structure
 
-- `src/components/ui/PrimaryButton.tsx` (introduced by #39): one shared primary-button component with semantic variants, disabled state, focus ring, hover, and pressed feedback. Existing screen buttons and the new in-round controls use it.
-- `src/components/game/MatchScoreboard.tsx` (introduced by #40): replaces the static right panel in `App.tsx`; derives live turn, difficulty, completed rounds, best time, and match progress from `MatchState`.
-- `src/components/game/RoundControls.tsx` (introduced by #42): pause/resume and restart-round controls displayed only during a playable round. It receives `isPaused`, `onPauseToggle`, and `onRestartRound` from `PlayingScreen`.
-- `src/components/game/` continues to own motion-local elements: the falling-block entry state lives in `FallingBlock`, active-player emphasis in `PlayerBlock`/`InPlayHud`, and paused presentation in `Playfield`.
-- `src/components/screens/` continues to own screen-specific motion: start motif in `StartScreen`, selected-card transition in `DifficultyScreen`, winner celebration in `ResultsScreen`, and player-friendly copy in all screens.
-- `src/hooks/useSurvivalTimer.ts`, `useFallingBlocks.ts`, and `useArrowKeyMovement.ts` gain a consistent `enabled`/paused gate. A paused round must preserve timer elapsed time, block positions, and player position without generating delayed catch-up movement after resume.
-- `src/types/game.ts` adds a minimal `RoundStatus`/`isPaused` representation only if reducer state must persist it across `PlayingScreen` remounts. Keep transient visual animation state local to components.
-- `src/state/gameState.ts` adds explicit pause/resume and restart-current-round actions. Restarting a round clears only the current in-progress round and returns it to a fresh playable state; it must not alter completed times, selected difficulty, active player, or the round number.
-- Tests remain colocated: reducer tests in `src/state/gameState.test.ts`, hook or component tests beside the affected module, and the full flow regression in `src/state/fullPlaythrough.e2e.test.ts`.
+- `src/types/game.ts`: change the canonical `ROUND_COUNT` from three to one. Keep `RoundTime` and `activeRound` structurally intact so display and state contracts remain stable; every player simply records one entry with `round: 1`.
+- `src/state/gameState.ts`: retain the existing reducer API and use the updated round count to transition directly from a completed player round to the player handoff or final results. Preserve pause/restart semantics and score calculation using the one recorded survival time per player.
+- `src/components/screens/` and `src/components/game/`: update visible instructions, HUD, scoreboard, round-end, handoff, and results labels to describe one turn per player rather than three rounds or a best round. Use the shared `ROUND_COUNT` for numeric progress where a count remains useful.
+- `src/components/screens/ScreenRouter.tsx`: add reducer-dispatched exit callbacks to the in-play and round-end views. The exit action returns the session to the start screen by creating a clean match state; it must not leave an active timer, delayed game-over completion, or stale match progress visible.
+- `src/state/gameState.test.ts`: extend reducer tests for direct single-round transitions and the exit action from valid and invalid screens.
+- `src/state/fullPlaythrough.e2e.test.ts`: adapt the full journey to one completed turn per player and assert correct winner/tie behavior. Add an exit journey test that confirms a fresh start state and no residual player data.
 
 ## Issue Dependency Map
 
-1. #35 Start-screen block motif is isolated to `StartScreen` and shared keyframes.
-2. #36 Difficulty-card selection animation is isolated to `DifficultyScreen`, but should use the shared motion tokens introduced with #35.
-3. #37 Falling-block entrance and active-player color build on existing `FallingBlock`, `PlayerBlock`, `InPlayHud`, and global motion utilities.
-4. #38 Winner celebration builds on `ResultsScreen` and existing `getMatchResult`; it must explicitly preserve the tie presentation.
-5. #39 Primary-button hover/pressed states should land before #42 so new controls inherit the same accessible interaction behavior.
-6. #40 Live scoreboard reads existing `MatchState` and should replace the static panel in `App.tsx` without changing game flow.
-7. #41 Player-friendly copy can be implemented independently, but should follow #40 so scoreboard labels and screen labels are updated together.
-8. #42 Pause/restart depends on #39 and touches reducer actions, `PlayingScreen`, all three real-time hooks, playfield visuals, and score preservation.
-9. #43 depends on #42 and verifies pause freezes every loop, resume continues from the same elapsed time/positions, and restart resets only the current round.
+1. **#53 — Single round per player:** change the canonical count and reducer transitions first. This establishes the behavior every later UI and test update consumes.
+2. **#54 — Single-round wording:** depends on #53 so all player-facing copy reflects the actual flow. Review every visible label that mentions rounds, sets, best rounds, or three attempts.
+3. **#55 — Single-round tests:** depends on #53 and validates the adapted reducer and complete playthrough without replacing existing suites.
+4. **#56 — Exit controls:** can be implemented after the baseline flow is single-round; add a reducer action and controls during play and at round end, using the existing shared button conventions.
+5. **#57 — Exit tests:** depends on #56 and extends both reducer and playthrough coverage for a clean, safe return to the start screen.
 
 ## Key Design Decisions
 
-- Use CSS keyframes and transforms for decorative and entrance motion. They are inexpensive, easy to respect under `prefers-reduced-motion`, and do not interfere with the requestAnimationFrame gameplay model.
-- Mark animation-only overlays as `aria-hidden`; preserve meaningful text labels and button states for assistive technology. Respect `prefers-reduced-motion: reduce` by shortening or disabling nonessential movement.
-- Use semantic data attributes or narrowly named classes for selected difficulty, active player, winner, and paused state. This keeps animation styling explicit and supports durable tests without coupling to presentation details.
-- Treat pause as a single source of truth passed to every game loop. On pause, cancel frame scheduling and retain state; on resume, reset each loop's last-frame timestamp to avoid a large elapsed delta.
-- Treat restart as a current-round reset, not a match reset. It resets only the in-flight timer, player position, falling blocks, collision visual state, and pause state; difficulty and previously recorded round results remain unchanged.
-- Keep winner celebration conditional on `MatchResult.status === 'winner'`; ties receive an equal, non-celebratory results state.
-- Keep all player-facing wording concise and action-led. Remove route, screen, focus, and developer terminology from visible UI while retaining useful accessible labels.
+- Make `ROUND_COUNT = 1` the sole format switch. Do not fork match state or create special single-round branches in components; existing `roundTimes.length`, shared count display, and reducer helpers should naturally support one recorded turn.
+- Keep score helpers (`getPlayerBestRoundTime` / `getPlayerScoreMs`) backward-compatible because a single entry is trivially the player's score. Rename visible copy where needed without introducing unnecessary state or API churn.
+- Treat exit as an explicit reducer action that returns `createInitialMatchState()`. This guarantees the current player, selected difficulties, timer state, pause state, and round records are all reset through one deterministic transition.
+- In `PlayingScreen`, cancel any pending game-over delay on unmount and keep the existing hook cleanup behavior so exiting cannot dispatch a late `completeRound` action into a new match.
+- Use the existing semantic buttons and `primary-button` interaction styles for exit confirmation. Make the action clear and available only in the requested playing and round-end states; avoid browser navigation or persistence.
+- Update tests by changing the existing helpers and assertions instead of adding a parallel test harness. Cover direct player-one-to-handoff and player-two-to-results progression, accurate final winner selection, and exit reset behavior.
