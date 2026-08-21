@@ -1,35 +1,58 @@
-# Blocky Single-Round Match and Exit Controls Plan
+# Arcade Color and Sound Plan
 
-## Current Architecture
+## Module structure
 
-- Blocky is a browser-only React + TypeScript game built with Vite and Tailwind. Match state is in-memory and reducer-owned; these issues require no server, authentication, storage, database, or schema changes.
-- `src/App.tsx` owns `useReducer(gameReducer, ...)`, passes the canonical `MatchState` to `ScreenRouter`, and renders the live `MatchProgressPanel` beside every active screen.
-- `src/state/gameState.ts` is the single match-flow authority. It owns active player, active round, pause/restart session state, selected difficulty, recorded times, handoff, results, and winner calculation. `ROUND_COUNT` in `src/types/game.ts` drives all completion checks.
-- `src/components/screens/ScreenRouter.tsx` composes the gameplay hooks, playfield, timer, HUD, and screen actions. The start, difficulty, round-end, handoff, and results views are separate components under `src/components/screens/`.
-- Reducer coverage is in `src/state/gameState.test.ts`; complete two-player journeys are exercised by `src/state/fullPlaythrough.e2e.test.ts`.
+- Keep visual tokens and motion in `src/styles.css`, with matching semantic
+  color names in `tailwind.config.ts` when component utility classes need them.
+- Keep animated ambient presentation at the app shell (`App.tsx`) so it spans
+  every screen without participating in game state or collision rendering.
+- Keep falling-block color selection in the game rendering layer. Derive a
+  stable palette entry from each block's existing id so colors are visual-only
+  and never change spawning, movement, collision, or testable block state.
+- Add sound modules under `src/audio/`: a small browser-safe Web Audio service,
+  a background-music hook, a victory-tune function, and a pure sound-settings
+  utility. Reuse the existing Web Audio compatibility/error-handling approach
+  in `src/utils/gameOverEffect.ts` rather than adding audio dependencies or
+  shipping binary assets.
+- Hold the persisted sound preference at the app shell and pass it to the
+  sound hooks and the visible toggle. Keep it outside `MatchState` because it
+  is an app preference, not per-match progression.
 
-## Planned Module Structure
+## Issue order and dependencies
 
-- `src/types/game.ts`: change the canonical `ROUND_COUNT` from three to one. Keep `RoundTime` and `activeRound` structurally intact so display and state contracts remain stable; every player simply records one entry with `round: 1`.
-- `src/state/gameState.ts`: retain the existing reducer API and use the updated round count to transition directly from a completed player round to the player handoff or final results. Preserve pause/restart semantics and score calculation using the one recorded survival time per player.
-- `src/components/screens/` and `src/components/game/`: update visible instructions, HUD, scoreboard, round-end, handoff, and results labels to describe one turn per player rather than three rounds or a best round. Use the shared `ROUND_COUNT` for numeric progress where a count remains useful.
-- `src/components/screens/ScreenRouter.tsx`: add reducer-dispatched exit callbacks to the in-play and round-end views. The exit action returns the session to the start screen by creating a clean match state; it must not leave an active timer, delayed game-over completion, or stale match progress visible.
-- `src/state/gameState.test.ts`: extend reducer tests for direct single-round transitions and the exit action from valid and invalid screens.
-- `src/state/fullPlaythrough.e2e.test.ts`: adapt the full journey to one completed turn per player and assert correct winner/tie behavior. Add an exit journey test that confirms a fresh start state and no residual player data.
+1. **#63** establishes the bright arcade design tokens and updates base
+   controls so later visual work uses one palette.
+2. **#64** builds the animated app-shell background on those tokens, honoring
+   `prefers-reduced-motion` and remaining behind interactive content.
+3. **#65** applies the palette to `FallingBlock` with stable id-derived colors;
+   gameplay hooks and collision data stay unchanged.
+4. **#66** refreshes the screen components and `MatchProgressPanel` using the
+   shared tokens so the play area and scoreboard remain readable at narrow
+   widths.
+5. **#67** adds pause-aware background music while a turn is actively playing.
+6. **#68** adds a one-shot winner/tie result tune without replaying on ordinary
+   rerenders.
+7. **#69** introduces the shared sound on/off preference and a keyboard-safe
+   visible toggle, then wires both #67 and #68 to it.
+8. **#70** tests the pure preference reducer/serialization behavior and the
+   existing game-flow integration points rather than browser audio output.
 
-## Issue Dependency Map
+## Key design decisions
 
-1. **#53 — Single round per player:** change the canonical count and reducer transitions first. This establishes the behavior every later UI and test update consumes.
-2. **#54 — Single-round wording:** depends on #53 so all player-facing copy reflects the actual flow. Review every visible label that mentions rounds, sets, best rounds, or three attempts.
-3. **#55 — Single-round tests:** depends on #53 and validates the adapted reducer and complete playthrough without replacing existing suites.
-4. **#56 — Exit controls:** can be implemented after the baseline flow is single-round; add a reducer action and controls during play and at round end, using the existing shared button conventions.
-5. **#57 — Exit tests:** depends on #56 and extends both reducer and playthrough coverage for a clean, safe return to the start screen.
-
-## Key Design Decisions
-
-- Make `ROUND_COUNT = 1` the sole format switch. Do not fork match state or create special single-round branches in components; existing `roundTimes.length`, shared count display, and reducer helpers should naturally support one recorded turn.
-- Keep score helpers (`getPlayerBestRoundTime` / `getPlayerScoreMs`) backward-compatible because a single entry is trivially the player's score. Rename visible copy where needed without introducing unnecessary state or API churn.
-- Treat exit as an explicit reducer action that returns `createInitialMatchState()`. This guarantees the current player, selected difficulties, timer state, pause state, and round records are all reset through one deterministic transition.
-- In `PlayingScreen`, cancel any pending game-over delay on unmount and keep the existing hook cleanup behavior so exiting cannot dispatch a late `completeRound` action into a new match.
-- Use the existing semantic buttons and `primary-button` interaction styles for exit confirmation. Make the action clear and available only in the requested playing and round-end states; avoid browser navigation or persistence.
-- Update tests by changing the existing helpers and assertions instead of adding a parallel test harness. Cover direct player-one-to-handoff and player-two-to-results progression, accurate final winner selection, and exit reset behavior.
+- Preserve all existing match, timer, movement, spawn, and collision state;
+  palette/background work is strictly presentational.
+- Use CSS custom properties for palette consistency, animated gradients, and
+  contrast-friendly foreground colors. Provide a reduced-motion fallback that
+  shows the static arcade palette with no continuous animation.
+- Use generated Web Audio tones instead of external music files. Audio calls
+  must no-op safely when Web Audio is unavailable or autoplay is blocked, and
+  contexts/nodes must be stopped and closed during cleanup.
+- Background music starts only for `screen === 'playing'`, stops on pause,
+  round end, exit, and unmount, and never affects timer progression.
+- Victory audio is keyed to a completed results outcome so it plays once per
+  result session; ties receive a neutral short cue.
+- Default sound to enabled, persist only the boolean preference in
+  `localStorage` behind guarded helpers, and use a pure default/fallback path
+  for SSR, malformed storage, and tests.
+- The sound toggle uses a semantic pressed state and focus-visible styling;
+  it must not capture arrow-key gameplay controls.
