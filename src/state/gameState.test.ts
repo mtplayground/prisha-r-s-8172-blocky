@@ -37,6 +37,25 @@ describe('gameReducer', () => {
     expect(state.players[2].roundTimes).toEqual([]);
   });
 
+  it('toggles sound without changing the in-progress match data', () => {
+    const playingState = chooseDefaultDifficulty();
+    const pausedState = gameReducer(playingState, { type: 'pauseRound' });
+    const mutedState = gameReducer(pausedState, {
+      type: 'setSoundEnabled',
+      enabled: false,
+    });
+    const unmutedState = gameReducer(mutedState, {
+      type: 'setSoundEnabled',
+      enabled: true,
+    });
+
+    expect(mutedState).toEqual({ ...pausedState, soundEnabled: false });
+    expect(unmutedState).toEqual({ ...pausedState, soundEnabled: true });
+    expect(unmutedState.players[1].difficulty).toBe('medium');
+    expect(unmutedState.players[1].roundTimes).toEqual([]);
+    expect(unmutedState.isPaused).toBe(true);
+  });
+
   it('moves from start to difficulty to gameplay for the active player', () => {
     const difficultyState = gameReducer(createInitialMatchState(), {
       type: 'beginMatch',
@@ -142,6 +161,44 @@ describe('gameReducer', () => {
     });
   });
 
+  it('keeps sound off through match screens without changing scores or the winner', () => {
+    let state = createInitialMatchState(false);
+    state = gameReducer(state, { type: 'beginMatch' });
+    state = gameReducer(state, {
+      type: 'chooseDifficulty',
+      difficulty: 'medium',
+    });
+    state = gameReducer(state, { type: 'completeRound', elapsedMs: 2_400 });
+
+    expect(state).toMatchObject({ screen: 'roundEnd', soundEnabled: false });
+    expect(state.players[1]).toMatchObject({
+      difficulty: 'medium',
+      roundTimes: [{ round: 1, elapsedMs: 2_400 }],
+    });
+
+    state = gameReducer(state, { type: 'continueAfterRound' });
+    expect(state).toMatchObject({ screen: 'handoff', soundEnabled: false });
+
+    state = gameReducer(state, { type: 'startNextPlayer' });
+    state = gameReducer(state, {
+      type: 'chooseDifficulty',
+      difficulty: 'easy',
+    });
+    state = gameReducer(state, { type: 'completeRound', elapsedMs: 6_200 });
+    state = gameReducer(state, { type: 'continueAfterRound' });
+
+    expect(state).toMatchObject({ screen: 'results', soundEnabled: false });
+    expect(state.players[2]).toMatchObject({
+      difficulty: 'easy',
+      roundTimes: [{ round: 1, elapsedMs: 6_200 }],
+    });
+    expect(getMatchResult(state)).toMatchObject({
+      status: 'winner',
+      winner: 2,
+      winningScoreMs: 6_200,
+    });
+  });
+
   it('returns a tie when both players have the same survival time', () => {
     let state = completeActivePlayerTurn(chooseDefaultDifficulty(), 5_000);
     state = gameReducer(state, { type: 'startNextPlayer' });
@@ -224,6 +281,26 @@ describe('gameReducer', () => {
     const exitedState = gameReducer(pausedState, { type: 'exitMatch' });
 
     expect(exitedState).toEqual(createInitialMatchState());
+  });
+
+  it('keeps the sound choice when starting a new game in the same session', () => {
+    let state = gameReducer(createInitialMatchState(), {
+      type: 'setSoundEnabled',
+      enabled: false,
+    });
+    state = completeActivePlayerTurn(chooseDefaultDifficulty(state), 3_100);
+    state = gameReducer(state, { type: 'startNextPlayer' });
+    state = gameReducer(state, {
+      type: 'chooseDifficulty',
+      difficulty: 'hard',
+    });
+    state = completeActivePlayerTurn(state, 4_200);
+
+    const newGameState = gameReducer(state, { type: 'restartMatch' });
+
+    expect(state.screen).toBe('results');
+    expect(newGameState).toEqual(createInitialMatchState(false));
+    expect(newGameState.soundEnabled).toBe(false);
   });
 
   it('exits from a completed turn and discards the recorded survival time', () => {
