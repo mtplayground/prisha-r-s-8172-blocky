@@ -1,3 +1,5 @@
+import { isSoundEnabled } from './soundSettings';
+
 type AudioContextConstructor = new () => AudioContext;
 
 type WebAudioWindow = Window &
@@ -10,6 +12,12 @@ type MusicNote = {
   offsetSeconds: number;
   durationSeconds: number;
   type: OscillatorType;
+};
+
+export type ResultsTune = 'winner' | 'tie';
+
+type OneShotSoundController = {
+  stop: () => void;
 };
 
 const LOOP_DURATION_SECONDS = 1.6;
@@ -88,6 +96,78 @@ const MUSIC_NOTES: MusicNote[] = [
     type: 'triangle',
   },
 ];
+const RESULTS_TUNE_NOTES: Record<ResultsTune, MusicNote[]> = {
+  winner: [
+    {
+      frequency: 523.25,
+      offsetSeconds: 0,
+      durationSeconds: 0.16,
+      type: 'square',
+    },
+    {
+      frequency: 659.25,
+      offsetSeconds: 0.14,
+      durationSeconds: 0.16,
+      type: 'square',
+    },
+    {
+      frequency: 783.99,
+      offsetSeconds: 0.28,
+      durationSeconds: 0.16,
+      type: 'square',
+    },
+    {
+      frequency: 1046.5,
+      offsetSeconds: 0.46,
+      durationSeconds: 0.38,
+      type: 'square',
+    },
+    {
+      frequency: 523.25,
+      offsetSeconds: 0.46,
+      durationSeconds: 0.38,
+      type: 'triangle',
+    },
+    {
+      frequency: 659.25,
+      offsetSeconds: 0.46,
+      durationSeconds: 0.38,
+      type: 'triangle',
+    },
+  ],
+  tie: [
+    {
+      frequency: 523.25,
+      offsetSeconds: 0,
+      durationSeconds: 0.2,
+      type: 'triangle',
+    },
+    {
+      frequency: 587.33,
+      offsetSeconds: 0.18,
+      durationSeconds: 0.2,
+      type: 'triangle',
+    },
+    {
+      frequency: 659.25,
+      offsetSeconds: 0.36,
+      durationSeconds: 0.2,
+      type: 'triangle',
+    },
+    {
+      frequency: 523.25,
+      offsetSeconds: 0.62,
+      durationSeconds: 0.34,
+      type: 'triangle',
+    },
+    {
+      frequency: 659.25,
+      offsetSeconds: 0.62,
+      durationSeconds: 0.34,
+      type: 'triangle',
+    },
+  ],
+};
 
 export type ArcadeMusicController = {
   start: () => void;
@@ -274,4 +354,110 @@ class WebAudioArcadeMusic implements ArcadeMusicController {
 
 export function createArcadeMusic(): ArcadeMusicController {
   return new WebAudioArcadeMusic();
+}
+
+export function playResultsTune(
+  tune: ResultsTune,
+): OneShotSoundController | null {
+  if (typeof window === 'undefined' || !isSoundEnabled()) {
+    return null;
+  }
+
+  let audioContext: AudioContext | null = null;
+
+  try {
+    const AudioContextCtor = getAudioContextConstructor();
+
+    if (!AudioContextCtor) {
+      return null;
+    }
+
+    const context = new AudioContextCtor();
+    audioContext = context;
+    const output = context.createGain();
+    const voices = new Set<OscillatorNode>();
+    let finished = false;
+    let cleanupTimeoutId: number | null = null;
+    const finish = () => {
+      if (finished) {
+        return;
+      }
+
+      finished = true;
+      if (cleanupTimeoutId !== null) {
+        window.clearTimeout(cleanupTimeoutId);
+      }
+      voices.forEach((oscillator) => {
+        try {
+          oscillator.stop();
+        } catch {
+          // Oscillators may have already reached their scheduled end.
+        }
+      });
+      voices.clear();
+
+      try {
+        output.disconnect();
+      } catch {
+        // The output can already be disconnected during browser teardown.
+      }
+      void context.close().catch(() => undefined);
+    };
+
+    output.gain.value = 0.085;
+    output.connect(context.destination);
+    const startTime = context.currentTime + 0.04;
+
+    try {
+      RESULTS_TUNE_NOTES[tune].forEach((note) => {
+        const oscillator = context.createOscillator();
+        const gain = context.createGain();
+        const endTime = startTime + note.offsetSeconds + note.durationSeconds;
+        const noteVolume = note.type === 'square' ? 0.65 : 0.42;
+
+        oscillator.type = note.type;
+        oscillator.frequency.setValueAtTime(
+          note.frequency,
+          startTime + note.offsetSeconds,
+        );
+        gain.gain.setValueAtTime(0.0001, startTime + note.offsetSeconds);
+        gain.gain.exponentialRampToValueAtTime(
+          noteVolume,
+          startTime + note.offsetSeconds + 0.015,
+        );
+        gain.gain.exponentialRampToValueAtTime(0.0001, endTime);
+
+        oscillator.connect(gain);
+        gain.connect(output);
+        voices.add(oscillator);
+        oscillator.onended = () => {
+          voices.delete(oscillator);
+          try {
+            oscillator.disconnect();
+            gain.disconnect();
+          } catch {
+            // The result screen may have unmounted while the tune was playing.
+          }
+
+          if (voices.size === 0) {
+            finish();
+          }
+        };
+        oscillator.start(startTime + note.offsetSeconds);
+        oscillator.stop(endTime + 0.02);
+      });
+
+      cleanupTimeoutId = window.setTimeout(finish, 1_500);
+      void context.resume().catch(finish);
+
+      return { stop: finish };
+    } catch {
+      finish();
+      return null;
+    }
+  } catch {
+    // Result sounds are optional and must never interrupt the final screen.
+    void audioContext?.close().catch(() => undefined);
+    return null;
+  }
 }
