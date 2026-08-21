@@ -5,6 +5,7 @@ import { useSurvivalTimer } from '../../hooks/useSurvivalTimer';
 import { getActivePlayer, type GameAction } from '../../state/gameState';
 import { type Difficulty, type MatchState } from '../../types/game';
 import { playGameOverSound } from '../../utils/gameOverEffect';
+import { ExitGameControl } from '../game/ExitGameControl';
 import { InPlayHud } from '../game/InPlayHud';
 import { Playfield } from '../game/Playfield';
 import { SurvivalTimer } from '../game/SurvivalTimer';
@@ -101,6 +102,11 @@ function PlayingScreen({
     completeCurrentRound();
   }, [completeCurrentRound]);
 
+  const handleExitMatch = useCallback(() => {
+    stopTimer();
+    dispatch({ type: 'exitMatch' });
+  }, [dispatch, stopTimer]);
+
   return (
     <div className="space-y-5">
       <div className="space-y-3">
@@ -148,6 +154,10 @@ function PlayingScreen({
         <PrimaryButton onClick={handleManualRoundEnd} disabled={state.isPaused}>
           End turn
         </PrimaryButton>
+        <ExitGameControl
+          onExit={handleExitMatch}
+          message="Your current turn will be discarded and the match will start over."
+        />
       </div>
     </div>
   );
@@ -186,6 +196,7 @@ export function ScreenRouter({ state, dispatch }: ScreenRouterProps) {
           playerId={state.activePlayer}
           roundTime={state.lastRoundTime}
           onContinue={() => dispatch({ type: 'continueAfterRound' })}
+          onExit={() => dispatch({ type: 'exitMatch' })}
         />
       );
 
