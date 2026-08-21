@@ -1,7 +1,11 @@
-import { getAudioContextConstructor } from './arcadeMusic';
+import {
+  getAudioContextConstructor,
+  registerGameAudioStop,
+} from './arcadeMusic';
+import { isSoundEnabled } from './soundSettings';
 
 export function playGameOverSound(): void {
-  if (typeof window === 'undefined') {
+  if (typeof window === 'undefined' || !isSoundEnabled()) {
     return;
   }
 
@@ -16,6 +20,22 @@ export function playGameOverSound(): void {
     const now = audioContext.currentTime;
     const oscillator = audioContext.createOscillator();
     const gain = audioContext.createGain();
+    let stopped = false;
+    let unregisterAudioStop: () => void = () => undefined;
+    const stopSound = () => {
+      if (stopped) {
+        return;
+      }
+
+      stopped = true;
+      unregisterAudioStop();
+      try {
+        oscillator.stop();
+      } catch {
+        // The short tone may have already reached its scheduled end.
+      }
+      void audioContext.close().catch(() => undefined);
+    };
 
     oscillator.type = 'square';
     oscillator.frequency.setValueAtTime(220, now);
@@ -28,8 +48,9 @@ export function playGameOverSound(): void {
     oscillator.connect(gain);
     gain.connect(audioContext.destination);
     oscillator.onended = () => {
-      void audioContext.close().catch(() => undefined);
+      stopSound();
     };
+    unregisterAudioStop = registerGameAudioStop(stopSound);
 
     void audioContext.resume().catch(() => undefined);
     oscillator.start(now);

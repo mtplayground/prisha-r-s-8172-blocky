@@ -13,6 +13,7 @@ export type GameAction =
   | { type: 'chooseDifficulty'; difficulty: Difficulty }
   | { type: 'pauseRound' }
   | { type: 'resumeRound' }
+  | { type: 'setSoundEnabled'; enabled: boolean }
   | { type: 'restartCurrentRound' }
   | { type: 'completeRound'; elapsedMs: number }
   | { type: 'continueAfterRound' }
@@ -48,12 +49,13 @@ function createPlayerState(id: PlayerId): PlayerMatchState {
   };
 }
 
-export function createInitialMatchState(): MatchState {
+export function createInitialMatchState(soundEnabled = true): MatchState {
   return {
     screen: 'start',
     activePlayer: 1,
     activeRound: 1,
     isPaused: false,
+    soundEnabled,
     roundSessionId: 0,
     players: {
       1: createPlayerState(1),
@@ -231,6 +233,11 @@ export function gameReducer(state: MatchState, action: GameAction): MatchState {
         ? { ...state, isPaused: false }
         : state;
 
+    case 'setSoundEnabled':
+      return state.soundEnabled === action.enabled
+        ? state
+        : { ...state, soundEnabled: action.enabled };
+
     case 'restartCurrentRound':
       return state.screen === 'playing'
         ? {
@@ -262,11 +269,11 @@ export function gameReducer(state: MatchState, action: GameAction): MatchState {
 
     case 'exitMatch':
       return state.screen === 'playing' || state.screen === 'roundEnd'
-        ? createInitialMatchState()
+        ? createInitialMatchState(state.soundEnabled)
         : state;
 
     case 'restartMatch':
-      return createInitialMatchState();
+      return createInitialMatchState(state.soundEnabled);
 
     default:
       return state;

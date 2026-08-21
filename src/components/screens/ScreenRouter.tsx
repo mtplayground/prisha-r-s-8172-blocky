@@ -6,9 +6,11 @@ import { getActivePlayer, type GameAction } from '../../state/gameState';
 import { type Difficulty, type MatchState } from '../../types/game';
 import {
   createArcadeMusic,
+  registerArcadeMusicStarter,
   type ArcadeMusicController,
 } from '../../utils/arcadeMusic';
 import { playGameOverSound } from '../../utils/gameOverEffect';
+import { isSoundEnabled } from '../../utils/soundSettings';
 import { ExitGameControl } from '../game/ExitGameControl';
 import { InPlayHud } from '../game/InPlayHud';
 import { Playfield } from '../game/Playfield';
@@ -74,7 +76,7 @@ function PlayingScreen({
   }, []);
 
   const startMusicFromInteraction = useCallback(() => {
-    if (hasCompletedRoundRef.current || state.isPaused) {
+    if (hasCompletedRoundRef.current || state.isPaused || !isSoundEnabled()) {
       return;
     }
 
@@ -88,12 +90,23 @@ function PlayingScreen({
   useEffect(() => {
     window.addEventListener('keydown', startMusicFromInteraction);
     window.addEventListener('pointerdown', startMusicFromInteraction);
+    const unregisterMusicStarter = registerArcadeMusicStarter(
+      startMusicFromInteraction,
+    );
 
     return () => {
       window.removeEventListener('keydown', startMusicFromInteraction);
       window.removeEventListener('pointerdown', startMusicFromInteraction);
+      unregisterMusicStarter();
     };
   }, [startMusicFromInteraction]);
+
+  useEffect(() => {
+    if (!state.soundEnabled) {
+      musicRef.current?.stop();
+      musicRef.current = null;
+    }
+  }, [state.soundEnabled]);
 
   const completeCurrentRound = useCallback(
     ({ showGameOverEffect = false } = {}) => {
