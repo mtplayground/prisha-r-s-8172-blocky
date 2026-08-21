@@ -4,6 +4,10 @@ import { getDifficultyOption } from '../../config/difficulty';
 import { useSurvivalTimer } from '../../hooks/useSurvivalTimer';
 import { getActivePlayer, type GameAction } from '../../state/gameState';
 import { type Difficulty, type MatchState } from '../../types/game';
+import {
+  createArcadeMusic,
+  type ArcadeMusicController,
+} from '../../utils/arcadeMusic';
 import { playGameOverSound } from '../../utils/gameOverEffect';
 import { ExitGameControl } from '../game/ExitGameControl';
 import { InPlayHud } from '../game/InPlayHud';
@@ -52,6 +56,7 @@ function PlayingScreen({
 }) {
   const hasCompletedRoundRef = useRef(false);
   const roundEndDelayRef = useRef<number | null>(null);
+  const musicRef = useRef<ArcadeMusicController | null>(null);
   const [isGameOverEffectVisible, setIsGameOverEffectVisible] = useState(false);
   const { elapsedMs, stopTimer } = useSurvivalTimer({
     paused: state.isPaused,
@@ -63,8 +68,32 @@ function PlayingScreen({
       if (roundEndDelayRef.current !== null) {
         window.clearTimeout(roundEndDelayRef.current);
       }
+      musicRef.current?.stop();
+      musicRef.current = null;
     };
   }, []);
+
+  const startMusicFromInteraction = useCallback(() => {
+    if (hasCompletedRoundRef.current || state.isPaused) {
+      return;
+    }
+
+    if (!musicRef.current) {
+      musicRef.current = createArcadeMusic();
+    }
+
+    musicRef.current.start();
+  }, [state.isPaused]);
+
+  useEffect(() => {
+    window.addEventListener('keydown', startMusicFromInteraction);
+    window.addEventListener('pointerdown', startMusicFromInteraction);
+
+    return () => {
+      window.removeEventListener('keydown', startMusicFromInteraction);
+      window.removeEventListener('pointerdown', startMusicFromInteraction);
+    };
+  }, [startMusicFromInteraction]);
 
   const completeCurrentRound = useCallback(
     ({ showGameOverEffect = false } = {}) => {
@@ -73,6 +102,7 @@ function PlayingScreen({
       }
 
       hasCompletedRoundRef.current = true;
+      musicRef.current?.stop();
       const finalElapsedMs = stopTimer();
 
       function dispatchRoundEnd() {
@@ -103,9 +133,21 @@ function PlayingScreen({
   }, [completeCurrentRound]);
 
   const handleExitMatch = useCallback(() => {
+    musicRef.current?.stop();
     stopTimer();
     dispatch({ type: 'exitMatch' });
   }, [dispatch, stopTimer]);
+
+  const handlePauseToggle = useCallback(() => {
+    if (state.isPaused) {
+      musicRef.current?.resume();
+      dispatch({ type: 'resumeRound' });
+      return;
+    }
+
+    musicRef.current?.pause();
+    dispatch({ type: 'pauseRound' });
+  }, [dispatch, state.isPaused]);
 
   return (
     <div className="space-y-5">
@@ -137,11 +179,7 @@ function PlayingScreen({
         onCollision={handleCollision}
       />
       <div className="flex flex-wrap gap-3">
-        <PrimaryButton
-          onClick={() =>
-            dispatch({ type: state.isPaused ? 'resumeRound' : 'pauseRound' })
-          }
-        >
+        <PrimaryButton onClick={handlePauseToggle}>
           {state.isPaused ? 'Resume turn' : 'Pause turn'}
         </PrimaryButton>
         <button
