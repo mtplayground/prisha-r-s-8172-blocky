@@ -10,7 +10,7 @@ import {
 
 type PlayerPlan = {
   difficulty: Difficulty;
-  roundTimes: readonly [number, number, number];
+  survivalTime: number;
 };
 
 function beginMatchForPlayerOne(difficulty: Difficulty): MatchState {
@@ -38,39 +38,34 @@ function beginMatchForPlayerOne(difficulty: Difficulty): MatchState {
   return playingState;
 }
 
-function completeRoundByCollision({
+function completeTurnByCollision({
   state,
   elapsedMs,
   expectedPlayer,
-  expectedRound,
 }: {
   state: MatchState;
   elapsedMs: number;
   expectedPlayer: PlayerId;
-  expectedRound: number;
 }): MatchState {
   expect(state).toMatchObject({
     screen: 'playing',
     activePlayer: expectedPlayer,
-    activeRound: expectedRound,
+    activeRound: 1,
   });
 
-  const roundEnd = gameReducer(state, { type: 'completeRound', elapsedMs });
+  const turnEnd = gameReducer(state, { type: 'completeRound', elapsedMs });
 
-  expect(roundEnd).toMatchObject({
+  expect(turnEnd).toMatchObject({
     screen: 'roundEnd',
     activePlayer: expectedPlayer,
-    activeRound: expectedRound,
-    lastRoundTime: {
-      round: expectedRound,
-      elapsedMs,
-    },
+    activeRound: 1,
+    lastRoundTime: { round: 1, elapsedMs },
   });
 
-  return roundEnd;
+  return gameReducer(turnEnd, { type: 'continueAfterRound' });
 }
 
-function pauseAndRestartCurrentRound(state: MatchState): MatchState {
+function pauseAndRestartCurrentTurn(state: MatchState): MatchState {
   const pausedState = gameReducer(state, { type: 'pauseRound' });
 
   expect(pausedState.isPaused).toBe(true);
@@ -85,43 +80,12 @@ function pauseAndRestartCurrentRound(state: MatchState): MatchState {
 
   expect(restartedState.screen).toBe('playing');
   expect(restartedState.activePlayer).toBe(state.activePlayer);
-  expect(restartedState.activeRound).toBe(state.activeRound);
+  expect(restartedState.activeRound).toBe(1);
   expect(restartedState.isPaused).toBe(false);
   expect(restartedState.players).toEqual(state.players);
   expect(restartedState.roundSessionId).toBe(state.roundSessionId + 1);
 
   return restartedState;
-}
-
-function completePlayerSet({
-  state,
-  playerId,
-  roundTimes,
-}: {
-  state: MatchState;
-  playerId: PlayerId;
-  roundTimes: PlayerPlan['roundTimes'];
-}): MatchState {
-  return roundTimes.reduce((currentState, elapsedMs, roundIndex) => {
-    const roundNumber = roundIndex + 1;
-    const roundEnd = completeRoundByCollision({
-      state: currentState,
-      elapsedMs,
-      expectedPlayer: playerId,
-      expectedRound: roundNumber,
-    });
-    const nextState = gameReducer(roundEnd, { type: 'continueAfterRound' });
-
-    if (roundNumber < roundTimes.length) {
-      expect(nextState).toMatchObject({
-        screen: 'playing',
-        activePlayer: playerId,
-        activeRound: roundNumber + 1,
-      });
-    }
-
-    return nextState;
-  }, state);
 }
 
 function runTwoPlayerMatch({
@@ -132,16 +96,13 @@ function runTwoPlayerMatch({
   playerTwo: PlayerPlan;
 }): MatchState {
   let state = beginMatchForPlayerOne(playerOne.difficulty);
-  state = completePlayerSet({
+  state = completeTurnByCollision({
     state,
-    playerId: 1,
-    roundTimes: playerOne.roundTimes,
+    elapsedMs: playerOne.survivalTime,
+    expectedPlayer: 1,
   });
 
-  expect(state).toMatchObject({
-    screen: 'handoff',
-    activePlayer: 1,
-  });
+  expect(state).toMatchObject({ screen: 'handoff', activePlayer: 1 });
 
   state = gameReducer(state, { type: 'startNextPlayer' });
   expect(state).toMatchObject({
@@ -154,91 +115,77 @@ function runTwoPlayerMatch({
     type: 'chooseDifficulty',
     difficulty: playerTwo.difficulty,
   });
-  expect(state).toMatchObject({
-    screen: 'playing',
-    activePlayer: 2,
-    activeRound: 1,
-  });
-
-  state = completePlayerSet({
+  state = completeTurnByCollision({
     state,
-    playerId: 2,
-    roundTimes: playerTwo.roundTimes,
+    elapsedMs: playerTwo.survivalTime,
+    expectedPlayer: 2,
   });
 
-  expect(state).toMatchObject({
-    screen: 'results',
-    activePlayer: 2,
-  });
+  expect(state).toMatchObject({ screen: 'results', activePlayer: 2 });
 
   return state;
 }
 
 describe('full two-player playthrough', () => {
-  it('runs start to final results and picks the winner from best survival times', () => {
+  it('runs start to final results and picks the winner from survival times', () => {
     const finalState = runTwoPlayerMatch({
-      playerOne: {
-        difficulty: 'hard',
-        roundTimes: [1100, 2800, 2100],
-      },
-      playerTwo: {
-        difficulty: 'easy',
-        roundTimes: [1900, 3600, 2400],
-      },
+      playerOne: { difficulty: 'hard', survivalTime: 2_800 },
+      playerTwo: { difficulty: 'easy', survivalTime: 3_600 },
     });
 
     expect(finalState.players[1].difficulty).toBe('hard');
     expect(finalState.players[2].difficulty).toBe('easy');
-    expect(finalState.players[1].roundTimes).toHaveLength(3);
-    expect(finalState.players[2].roundTimes).toHaveLength(3);
+    expect(finalState.players[1].roundTimes).toEqual([
+      { round: 1, elapsedMs: 2_800 },
+    ]);
+    expect(finalState.players[2].roundTimes).toEqual([
+      { round: 1, elapsedMs: 3_600 },
+    ]);
     expect(getMatchResult(finalState)).toEqual({
       status: 'winner',
       winner: 2,
-      winningScoreMs: 3600,
+      winningScoreMs: 3_600,
       marginMs: 800,
-      playerScores: {
-        1: 2800,
-        2: 3600,
-      },
+      playerScores: { 1: 2_800, 2: 3_600 },
     });
   });
 
   it.each([
-    {
-      playerOne: [4200, 3100, 2900],
-      playerTwo: [2500, 3900, 3300],
-      winner: 1,
-    },
-    {
-      playerOne: [1600, 2100, 1800],
-      playerTwo: [2200, 1900, 1700],
-      winner: 2,
-    },
+    { playerOne: 4_200, playerTwo: 3_900, winner: 1 },
+    { playerOne: 1_600, playerTwo: 2_200, winner: 2 },
   ] as const)(
-    'determines winner $winner from the longest round in each set',
+    'determines winner $winner from each player survival time',
     ({ playerOne, playerTwo, winner }) => {
       const finalState = runTwoPlayerMatch({
-        playerOne: {
-          difficulty: 'medium',
-          roundTimes: playerOne,
-        },
-        playerTwo: {
-          difficulty: 'medium',
-          roundTimes: playerTwo,
-        },
+        playerOne: { difficulty: 'medium', survivalTime: playerOne },
+        playerTwo: { difficulty: 'medium', survivalTime: playerTwo },
       });
 
       expect(getMatchResult(finalState).winner).toBe(winner);
     },
   );
 
+  it('returns a tie for equal survival times', () => {
+    const finalState = runTwoPlayerMatch({
+      playerOne: { difficulty: 'easy', survivalTime: 3_000 },
+      playerTwo: { difficulty: 'hard', survivalTime: 3_000 },
+    });
+
+    expect(getMatchResult(finalState)).toEqual({
+      status: 'tie',
+      winner: null,
+      winningScoreMs: 3_000,
+      playerScores: { 1: 3_000, 2: 3_000 },
+    });
+  });
+
   it('keeps the correct winner when pause and restart are used mid-match', () => {
     let state = beginMatchForPlayerOne('hard');
-    state = pauseAndRestartCurrentRound(state);
-    state = completePlayerSet({
+    state = pauseAndRestartCurrentTurn(state);
+    state = completeTurnByCollision({
       state,
-      playerId: 1,
-      roundTimes: [1_500, 4_300, 2_700],
+      elapsedMs: 4_300,
+      expectedPlayer: 1,
     });
 
     expect(state.screen).toBe('handoff');
@@ -247,11 +194,11 @@ describe('full two-player playthrough', () => {
       type: 'chooseDifficulty',
       difficulty: 'easy',
     });
-    state = pauseAndRestartCurrentRound(state);
-    state = completePlayerSet({
+    state = pauseAndRestartCurrentTurn(state);
+    state = completeTurnByCollision({
       state,
-      playerId: 2,
-      roundTimes: [2_100, 5_100, 3_800],
+      elapsedMs: 5_100,
+      expectedPlayer: 2,
     });
 
     expect(state.screen).toBe('results');

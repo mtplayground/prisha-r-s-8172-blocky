@@ -11,11 +11,7 @@ function createPlayerOneFinishedState(): MatchState {
       1: {
         id: 1,
         difficulty: 'hard',
-        roundTimes: [
-          { round: 1, elapsedMs: 1800 },
-          { round: 2, elapsedMs: 3400 },
-          { round: 3, elapsedMs: 2600 },
-        ],
+        roundTimes: [{ round: 1, elapsedMs: 1_800 }],
       },
       2: {
         id: 2,
@@ -27,31 +23,25 @@ function createPlayerOneFinishedState(): MatchState {
 }
 
 describe('getMatchProgressModel', () => {
-  it('shows state-derived player scores and the next player at handoff', () => {
+  it('shows player 1 survival time and the target at handoff', () => {
     const progress = getMatchProgressModel(createPlayerOneFinishedState());
 
     expect(progress.turn).toEqual({
       playerId: 2,
       label: 'Pass the keyboard to Player 2',
     });
-    expect(progress.timeToBeatLabel).toBe('3.4s');
+    expect(progress.timeToBeatLabel).toBe('1.8s');
     expect(progress.players).toEqual([
-      expect.objectContaining({
+      {
         id: 1,
         difficultyLabel: 'Hard',
-        bestTimeLabel: '3.4s',
-        roundTimes: [
-          { round: 1, elapsedMs: 1800 },
-          { round: 2, elapsedMs: 3400 },
-          { round: 3, elapsedMs: 2600 },
-        ],
-      }),
-      expect.objectContaining({
+        survivalTimeLabel: '1.8s',
+      },
+      {
         id: 2,
         difficultyLabel: 'Not selected',
-        bestTimeLabel: '—',
-        roundTimes: [],
-      }),
+        survivalTimeLabel: '—',
+      },
     ]);
   });
 
@@ -64,7 +54,7 @@ describe('getMatchProgressModel', () => {
         1: {
           id: 1,
           difficulty: 'easy',
-          roundTimes: [{ round: 1, elapsedMs: 1200 }],
+          roundTimes: [],
         },
         2: {
           id: 2,
@@ -78,17 +68,17 @@ describe('getMatchProgressModel', () => {
 
     expect(progress.turn).toEqual({ playerId: 1, label: "Player 1's turn" });
     expect(progress.timeToBeatLabel).toBeNull();
-    expect(progress.players[0]).toEqual(
-      expect.objectContaining({
+    expect(progress.players).toEqual([
+      {
+        id: 1,
         difficultyLabel: 'Easy',
-        bestTimeLabel: '1.2s',
-      }),
-    );
-    expect(progress.players[1]).toEqual(
-      expect.objectContaining({
+        survivalTimeLabel: '—',
+      },
+      {
+        id: 2,
         difficultyLabel: 'Medium',
-        bestTimeLabel: '—',
-      }),
-    );
+        survivalTimeLabel: '—',
+      },
+    ]);
   });
 });

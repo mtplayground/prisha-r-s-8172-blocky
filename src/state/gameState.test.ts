@@ -17,22 +17,17 @@ function chooseDefaultDifficulty(state = createInitialMatchState()) {
   });
 }
 
-function completeActivePlayerRounds(
+function completeActivePlayerTurn(
   state: MatchState,
-  roundTimes: number[],
+  elapsedMs: number,
 ): MatchState {
-  return roundTimes.reduce((currentState, elapsedMs) => {
-    const roundEnd = gameReducer(currentState, {
-      type: 'completeRound',
-      elapsedMs,
-    });
+  const turnEnd = gameReducer(state, { type: 'completeRound', elapsedMs });
 
-    return gameReducer(roundEnd, { type: 'continueAfterRound' });
-  }, state);
+  return gameReducer(turnEnd, { type: 'continueAfterRound' });
 }
 
 describe('gameReducer', () => {
-  it('starts at the start screen for player 1 round 1', () => {
+  it('starts at the start screen for player 1', () => {
     const state = createInitialMatchState();
 
     expect(state.screen).toBe('start');
@@ -56,7 +51,7 @@ describe('gameReducer', () => {
     expect(getActivePlayer(playingState).difficulty).toBe('hard');
   });
 
-  it('keeps the active player difficulty across that player set', () => {
+  it('keeps the selected difficulty through the player turn', () => {
     const playingState = gameReducer(
       gameReducer(createInitialMatchState(), { type: 'beginMatch' }),
       {
@@ -64,140 +59,105 @@ describe('gameReducer', () => {
         difficulty: 'hard',
       },
     );
-    const roundEnd = gameReducer(playingState, {
+    const turnEnd = gameReducer(playingState, {
       type: 'completeRound',
-      elapsedMs: 1500,
+      elapsedMs: 1_500,
     });
-    const nextRound = gameReducer(roundEnd, { type: 'continueAfterRound' });
+    const handoff = gameReducer(turnEnd, { type: 'continueAfterRound' });
 
-    expect(nextRound.screen).toBe('playing');
-    expect(nextRound.activePlayer).toBe(1);
-    expect(nextRound.players[1].difficulty).toBe('hard');
-  });
-
-  it('records three player 1 rounds before the handoff screen', () => {
-    const roundOneEnd = gameReducer(chooseDefaultDifficulty(), {
-      type: 'completeRound',
-      elapsedMs: 1234.4,
-    });
-    const roundTwoStart = gameReducer(roundOneEnd, {
-      type: 'continueAfterRound',
-    });
-    const roundTwoEnd = gameReducer(roundTwoStart, {
-      type: 'completeRound',
-      elapsedMs: 2345,
-    });
-    const roundThreeStart = gameReducer(roundTwoEnd, {
-      type: 'continueAfterRound',
-    });
-    const roundThreeEnd = gameReducer(roundThreeStart, {
-      type: 'completeRound',
-      elapsedMs: 3456,
-    });
-    const handoff = gameReducer(roundThreeEnd, {
-      type: 'continueAfterRound',
-    });
-
-    expect(roundOneEnd.screen).toBe('roundEnd');
-    expect(roundOneEnd.players[1].roundTimes[0]).toEqual({
-      round: 1,
-      elapsedMs: 1234,
-    });
-    expect(roundTwoStart).toMatchObject({
-      screen: 'playing',
-      activePlayer: 1,
-      activeRound: 2,
-    });
-    expect(roundThreeStart.activeRound).toBe(3);
     expect(handoff.screen).toBe('handoff');
     expect(handoff.activePlayer).toBe(1);
-    expect(handoff.players[1].roundTimes).toHaveLength(3);
+    expect(handoff.players[1].difficulty).toBe('hard');
   });
 
-  it('moves player 2 through three rounds to results', () => {
-    let state = chooseDefaultDifficulty();
+  it('records player 1 once and advances directly to handoff', () => {
+    const turnEnd = gameReducer(chooseDefaultDifficulty(), {
+      type: 'completeRound',
+      elapsedMs: 1_234.4,
+    });
+    const handoff = gameReducer(turnEnd, { type: 'continueAfterRound' });
 
-    for (const elapsedMs of [1000, 2000, 3000]) {
-      state = gameReducer(state, { type: 'completeRound', elapsedMs });
-      state = gameReducer(state, { type: 'continueAfterRound' });
-    }
+    expect(turnEnd.screen).toBe('roundEnd');
+    expect(turnEnd.players[1].roundTimes).toEqual([
+      { round: 1, elapsedMs: 1_234 },
+    ]);
+    expect(handoff).toMatchObject({
+      screen: 'handoff',
+      activePlayer: 1,
+      activeRound: 1,
+    });
+    expect(handoff.players[1].roundTimes).toHaveLength(1);
+  });
+
+  it('records player 2 once and advances directly to results', () => {
+    let state = completeActivePlayerTurn(chooseDefaultDifficulty(), 1_000);
 
     state = gameReducer(state, { type: 'startNextPlayer' });
     state = gameReducer(state, {
       type: 'chooseDifficulty',
       difficulty: 'easy',
     });
-
-    for (const elapsedMs of [4000, 5000, 6000]) {
-      state = gameReducer(state, { type: 'completeRound', elapsedMs });
-      state = gameReducer(state, { type: 'continueAfterRound' });
-    }
+    state = completeActivePlayerTurn(state, 4_000);
 
     expect(state.screen).toBe('results');
     expect(state.activePlayer).toBe(2);
-    expect(state.players[1].roundTimes).toHaveLength(3);
-    expect(state.players[2].roundTimes).toHaveLength(3);
+    expect(state.players[1].roundTimes).toHaveLength(1);
+    expect(state.players[2].roundTimes).toHaveLength(1);
     expect(state.players[1].difficulty).toBe('medium');
     expect(state.players[2].difficulty).toBe('easy');
   });
 
-  it('uses the longest of three rounds as the player score', () => {
-    let state = chooseDefaultDifficulty();
-
-    for (const elapsedMs of [2400, 5100, 3700]) {
-      state = gameReducer(state, { type: 'completeRound', elapsedMs });
-      state = gameReducer(state, { type: 'continueAfterRound' });
-    }
+  it('uses a player survival time as their score', () => {
+    const state = gameReducer(chooseDefaultDifficulty(), {
+      type: 'completeRound',
+      elapsedMs: 5_100,
+    });
 
     expect(getPlayerBestRoundTime(state.players[1])).toEqual({
-      round: 2,
-      elapsedMs: 5100,
+      round: 1,
+      elapsedMs: 5_100,
     });
-    expect(getPlayerScoreMs(state.players[1])).toBe(5100);
+    expect(getPlayerScoreMs(state.players[1])).toBe(5_100);
   });
 
-  it('compares final scores and returns the player with the longer survival time', () => {
-    let state = chooseDefaultDifficulty();
-
-    state = completeActivePlayerRounds(state, [2400, 5100, 3700]);
+  it('returns the player with the longer survival time as winner', () => {
+    let state = completeActivePlayerTurn(chooseDefaultDifficulty(), 2_400);
     state = gameReducer(state, { type: 'startNextPlayer' });
     state = gameReducer(state, {
       type: 'chooseDifficulty',
       difficulty: 'easy',
     });
-    state = completeActivePlayerRounds(state, [6200, 4100, 3900]);
+    state = completeActivePlayerTurn(state, 6_200);
 
     expect(state.screen).toBe('results');
     expect(getMatchResult(state)).toEqual({
       status: 'winner',
       winner: 2,
-      winningScoreMs: 6200,
-      marginMs: 1100,
+      winningScoreMs: 6_200,
+      marginMs: 3_800,
       playerScores: {
-        1: 5100,
-        2: 6200,
+        1: 2_400,
+        2: 6_200,
       },
     });
   });
 
-  it('returns a tie when both players have the same best survival time', () => {
-    let state = chooseDefaultDifficulty();
-
-    state = completeActivePlayerRounds(state, [4000, 5000, 3000]);
+  it('returns a tie when both players have the same survival time', () => {
+    let state = completeActivePlayerTurn(chooseDefaultDifficulty(), 5_000);
     state = gameReducer(state, { type: 'startNextPlayer' });
     state = gameReducer(state, {
       type: 'chooseDifficulty',
       difficulty: 'hard',
     });
-    state = completeActivePlayerRounds(state, [5000, 2500, 4200]);
+    state = completeActivePlayerTurn(state, 5_000);
 
     expect(getMatchResult(state)).toEqual({
       status: 'tie',
       winner: null,
-      winningScoreMs: 5000,
+      winningScoreMs: 5_000,
       playerScores: {
-        1: 5000,
-        2: 5000,
+        1: 5_000,
+        2: 5_000,
       },
     });
   });
@@ -236,11 +196,8 @@ describe('gameReducer', () => {
     expect(endedState.lastRoundTime).toEqual({ round: 1, elapsedMs: 1_450 });
   });
 
-  it('restarts only the current round while preserving match progress', () => {
-    let state = chooseDefaultDifficulty();
-    state = gameReducer(state, { type: 'completeRound', elapsedMs: 1_250 });
-    state = gameReducer(state, { type: 'continueAfterRound' });
-
+  it('restarts the in-progress player turn without recording a time', () => {
+    const state = chooseDefaultDifficulty();
     const pausedState = gameReducer(state, { type: 'pauseRound' });
     const restartedState = gameReducer(pausedState, {
       type: 'restartCurrentRound',
@@ -249,12 +206,12 @@ describe('gameReducer', () => {
     expect(restartedState).toMatchObject({
       screen: 'playing',
       activePlayer: 1,
-      activeRound: 2,
+      activeRound: 1,
       isPaused: false,
       players: {
         1: {
           difficulty: 'medium',
-          roundTimes: [{ round: 1, elapsedMs: 1_250 }],
+          roundTimes: [],
         },
       },
     });
