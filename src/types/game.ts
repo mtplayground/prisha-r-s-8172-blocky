@@ -1,5 +1,5 @@
 export const PLAYER_IDS = [1, 2] as const;
-export const ROUND_COUNT = 3;
+export const ROUND_COUNT = 1;
 
 export type PlayerId = (typeof PLAYER_IDS)[number];
 

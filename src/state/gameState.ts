@@ -141,7 +141,7 @@ export function formatElapsedTime(elapsedMs: number): string {
 function recordRound(state: MatchState, elapsedMs: number): MatchState {
   const activePlayer = getActivePlayer(state);
 
-  if (activePlayer.roundTimes.length >= ROUND_COUNT) {
+  if (hasPlayerFinishedRounds(state, state.activePlayer)) {
     return state;
   }
 
@@ -168,7 +168,7 @@ function recordRound(state: MatchState, elapsedMs: number): MatchState {
 function continueAfterRound(state: MatchState): MatchState {
   const activePlayer = getActivePlayer(state);
 
-  if (activePlayer.roundTimes.length < ROUND_COUNT) {
+  if (!hasPlayerFinishedRounds(state, state.activePlayer)) {
     return {
       ...state,
       screen: 'playing',
