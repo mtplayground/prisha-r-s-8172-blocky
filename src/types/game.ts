@@ -45,11 +45,23 @@ export type DifficultyTuning = {
 
 export type HorizontalDirection = -1 | 0 | 1;
 
+export const FALLING_BLOCK_COLORS = [
+  'hazard',
+  'pink',
+  'orange',
+  'yellow',
+  'lime',
+  'cyan',
+] as const;
+
+export type FallingBlockColor = (typeof FALLING_BLOCK_COLORS)[number];
+
 export type FallingBlockState = {
   id: number;
   x: number;
   y: number;
   size: number;
+  color?: FallingBlockColor;
 };
 
 export type Rectangle = {

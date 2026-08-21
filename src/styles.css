@@ -530,9 +530,35 @@ select {
 }
 
 .falling-block {
+  --falling-block-color: var(--arcade-hazard);
   animation: falling-block-enter 260ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  background: var(--falling-block-color);
+  box-shadow:
+    0 0 0 2px rgba(33, 22, 74, 0.48),
+    0 0.45rem 0.9rem
+      color-mix(in srgb, var(--falling-block-color) 48%, transparent);
   transform-origin: center top;
   will-change: opacity, transform;
+}
+
+.falling-block--pink {
+  --falling-block-color: var(--arcade-pink);
+}
+
+.falling-block--orange {
+  --falling-block-color: var(--arcade-orange);
+}
+
+.falling-block--yellow {
+  --falling-block-color: var(--arcade-yellow);
+}
+
+.falling-block--lime {
+  --falling-block-color: var(--arcade-lime);
+}
+
+.falling-block--cyan {
+  --falling-block-color: var(--arcade-cyan);
 }
 
 .player-block {

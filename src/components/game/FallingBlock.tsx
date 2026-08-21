@@ -11,10 +11,12 @@ export function FallingBlock({
   playfieldWidth,
   playfieldHeight,
 }: FallingBlockProps) {
+  const color = block.color ?? 'hazard';
+
   return (
     <div
       aria-label="Falling block"
-      className="falling-block absolute bg-hazard shadow-[0_0_0_2px_rgba(22,22,22,0.16)]"
+      className={`falling-block falling-block--${color} absolute`}
       style={{
         left: `${(block.x / playfieldWidth) * 100}%`,
         top: `${(block.y / playfieldHeight) * 100}%`,

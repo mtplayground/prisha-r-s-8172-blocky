@@ -1,6 +1,10 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { PLAYFIELD_CONFIG } from '../config/playfield';
-import type { DifficultyTuning, FallingBlockState } from '../types/game';
+import {
+  FALLING_BLOCK_COLORS,
+  type DifficultyTuning,
+  type FallingBlockState,
+} from '../types/game';
 import {
   advanceFallingBlocks,
   chooseFallingBlockSpawnX,
@@ -86,15 +90,19 @@ export function useFallingBlocks({
         previousX: previousSpawnXRef.current,
         random: Math.random,
       });
+      const id = nextBlockIdRef.current++;
       previousSpawnXRef.current = x;
 
       setBlocks((currentBlocks) => [
         ...currentBlocks,
-        createFallingBlock({
-          id: nextBlockIdRef.current++,
-          x,
-          size: PLAYFIELD_CONFIG.blockSize,
-        }),
+        {
+          ...createFallingBlock({
+            id,
+            x,
+            size: PLAYFIELD_CONFIG.blockSize,
+          }),
+          color: FALLING_BLOCK_COLORS[(id - 1) % FALLING_BLOCK_COLORS.length],
+        },
       ]);
     }
 
