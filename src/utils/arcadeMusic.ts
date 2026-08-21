@@ -168,6 +168,8 @@ const RESULTS_TUNE_NOTES: Record<ResultsTune, MusicNote[]> = {
     },
   ],
 };
+const activeAudioStops = new Set<() => void>();
+const musicStartRequests = new Set<() => void>();
 
 export type ArcadeMusicController = {
   start: () => void;
@@ -185,16 +187,41 @@ export function getAudioContextConstructor():
   return window.AudioContext ?? (window as WebAudioWindow).webkitAudioContext;
 }
 
+export function registerGameAudioStop(stop: () => void): () => void {
+  activeAudioStops.add(stop);
+
+  return () => {
+    activeAudioStops.delete(stop);
+  };
+}
+
+export function stopAllGameAudio(): void {
+  Array.from(activeAudioStops).forEach((stop) => stop());
+}
+
+export function registerArcadeMusicStarter(start: () => void): () => void {
+  musicStartRequests.add(start);
+
+  return () => {
+    musicStartRequests.delete(start);
+  };
+}
+
+export function requestArcadeMusicStart(): void {
+  Array.from(musicStartRequests).forEach((start) => start());
+}
+
 class WebAudioArcadeMusic implements ArcadeMusicController {
   private context: AudioContext | null = null;
   private output: GainNode | null = null;
   private loopTimeoutId: number | null = null;
   private paused = false;
   private stopped = false;
+  private unregisterAudioStop: (() => void) | null = null;
   private readonly voices = new Set<OscillatorNode>();
 
   start() {
-    if (this.stopped) {
+    if (this.stopped || !isSoundEnabled()) {
       return;
     }
 
@@ -217,7 +244,7 @@ class WebAudioArcadeMusic implements ArcadeMusicController {
   }
 
   resume() {
-    if (!this.context || this.stopped) {
+    if (!this.context || this.stopped || !isSoundEnabled()) {
       return;
     }
 
@@ -240,6 +267,8 @@ class WebAudioArcadeMusic implements ArcadeMusicController {
     this.stopped = true;
     this.clearLoopTimeout();
     this.stopVoices();
+    this.unregisterAudioStop?.();
+    this.unregisterAudioStop = null;
 
     if (this.output) {
       try {
@@ -272,6 +301,7 @@ class WebAudioArcadeMusic implements ArcadeMusicController {
 
       this.context = context;
       this.output = output;
+      this.unregisterAudioStop = registerGameAudioStop(() => this.stop());
     } catch {
       // Audio is optional; a failed setup must not interrupt the round.
       this.stopped = true;
@@ -378,12 +408,14 @@ export function playResultsTune(
     const voices = new Set<OscillatorNode>();
     let finished = false;
     let cleanupTimeoutId: number | null = null;
+    let unregisterAudioStop: () => void = () => undefined;
     const finish = () => {
       if (finished) {
         return;
       }
 
       finished = true;
+      unregisterAudioStop();
       if (cleanupTimeoutId !== null) {
         window.clearTimeout(cleanupTimeoutId);
       }
@@ -404,6 +436,7 @@ export function playResultsTune(
       void context.close().catch(() => undefined);
     };
 
+    unregisterAudioStop = registerGameAudioStop(finish);
     output.gain.value = 0.085;
     output.connect(context.destination);
     const startTime = context.currentTime + 0.04;

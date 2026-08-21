@@ -24,6 +24,7 @@ export type MatchState = {
   activePlayer: PlayerId;
   activeRound: number;
   isPaused: boolean;
+  soundEnabled: boolean;
   roundSessionId: number;
   players: Record<PlayerId, PlayerMatchState>;
   lastRoundTime: RoundTime | null;
