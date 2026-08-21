@@ -218,6 +218,52 @@ describe('gameReducer', () => {
     expect(restartedState.roundSessionId).toBe(pausedState.roundSessionId + 1);
   });
 
+  it('exits an in-progress match with a completely fresh state', () => {
+    const playingState = chooseDefaultDifficulty();
+    const pausedState = gameReducer(playingState, { type: 'pauseRound' });
+    const exitedState = gameReducer(pausedState, { type: 'exitMatch' });
+
+    expect(exitedState).toEqual(createInitialMatchState());
+  });
+
+  it('exits from a completed turn and discards the recorded survival time', () => {
+    const roundEndState = gameReducer(chooseDefaultDifficulty(), {
+      type: 'completeRound',
+      elapsedMs: 4_200,
+    });
+    const exitedState = gameReducer(roundEndState, { type: 'exitMatch' });
+
+    expect(roundEndState).toMatchObject({
+      screen: 'roundEnd',
+      lastRoundTime: { round: 1, elapsedMs: 4_200 },
+      players: {
+        1: {
+          difficulty: 'medium',
+          roundTimes: [{ round: 1, elapsedMs: 4_200 }],
+        },
+      },
+    });
+    expect(exitedState).toEqual(createInitialMatchState());
+  });
+
+  it('keeps ending a turn separate from exiting the match', () => {
+    const turnEnd = gameReducer(chooseDefaultDifficulty(), {
+      type: 'completeRound',
+      elapsedMs: 2_750,
+    });
+    const handoff = gameReducer(turnEnd, { type: 'continueAfterRound' });
+
+    expect(turnEnd).toMatchObject({
+      screen: 'roundEnd',
+      activePlayer: 1,
+      lastRoundTime: { round: 1, elapsedMs: 2_750 },
+    });
+    expect(turnEnd.players[1].roundTimes).toEqual([
+      { round: 1, elapsedMs: 2_750 },
+    ]);
+    expect(handoff.screen).toBe('handoff');
+  });
+
   it('ignores actions that do not match the current screen', () => {
     const state = createInitialMatchState();
 
