@@ -1,5 +1,4 @@
-import { formatElapsedTime } from '../../state/gameState';
-import { ROUND_COUNT, type MatchState } from '../../types/game';
+import type { MatchState } from '../../types/game';
 import { getMatchProgressModel } from '../../utils/matchProgress';
 
 export function MatchProgressPanel({ state }: { state: MatchState }) {
@@ -40,7 +39,7 @@ export function MatchProgressPanel({ state }: { state: MatchState }) {
             {progress.timeToBeatLabel}
           </p>
           <p className="mt-1 text-xs leading-5 text-zinc-700">
-            Player 2 needs a longer best round.
+            Player 2 needs to survive longer.
           </p>
         </div>
       ) : null}
@@ -76,33 +75,18 @@ export function MatchProgressPanel({ state }: { state: MatchState }) {
                   </dd>
                 </div>
                 <div>
-                  <dt className="text-zinc-600">Best time</dt>
+                  <dt className="text-zinc-600">Survival time</dt>
                   <dd className="mt-0.5 font-mono font-semibold tabular-nums text-ink">
-                    {player.bestTimeLabel}
+                    {player.survivalTimeLabel}
                   </dd>
                 </div>
               </dl>
 
-              <div className="mt-3 border-t border-line pt-2">
-                <p className="text-xs font-semibold text-zinc-700">
-                  Rounds {player.roundTimes.length} / {ROUND_COUNT}
+              {player.survivalTimeLabel === '—' ? (
+                <p className="mt-3 border-t border-line pt-2 text-xs text-zinc-600">
+                  Not played yet
                 </p>
-                {player.roundTimes.length > 0 ? (
-                  <ol className="mt-1 grid grid-cols-3 gap-1 text-xs text-zinc-700">
-                    {player.roundTimes.map((roundTime) => (
-                      <li
-                        key={roundTime.round}
-                        className="bg-panel px-1.5 py-1 font-mono tabular-nums"
-                      >
-                        R{roundTime.round}{' '}
-                        {formatElapsedTime(roundTime.elapsedMs)}
-                      </li>
-                    ))}
-                  </ol>
-                ) : (
-                  <p className="mt-1 text-xs text-zinc-600">No rounds yet</p>
-                )}
-              </div>
+              ) : null}
             </section>
           );
         })}

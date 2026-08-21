@@ -3,11 +3,7 @@ import type React from 'react';
 import { getDifficultyOption } from '../../config/difficulty';
 import { useSurvivalTimer } from '../../hooks/useSurvivalTimer';
 import { getActivePlayer, type GameAction } from '../../state/gameState';
-import {
-  ROUND_COUNT,
-  type Difficulty,
-  type MatchState,
-} from '../../types/game';
+import { type Difficulty, type MatchState } from '../../types/game';
 import { playGameOverSound } from '../../utils/gameOverEffect';
 import { InPlayHud } from '../game/InPlayHud';
 import { Playfield } from '../game/Playfield';
@@ -112,8 +108,7 @@ function PlayingScreen({
           Stay moving
         </p>
         <h2 className="text-3xl font-bold tracking-normal">
-          Player {state.activePlayer}, round {state.activeRound} of{' '}
-          {ROUND_COUNT}
+          Player {state.activePlayer}, it&apos;s your turn.
         </h2>
         <p className="max-w-2xl text-lg leading-8 text-zinc-700">
           You&apos;re playing on {difficultyOption.label}. Dodge the falling
@@ -123,8 +118,6 @@ function PlayingScreen({
       <div className="flex flex-wrap items-end justify-between gap-3">
         <InPlayHud
           playerId={state.activePlayer}
-          currentRound={state.activeRound}
-          totalRounds={ROUND_COUNT}
           difficultyLabel={difficultyOption.label}
           isPaused={state.isPaused}
         />
@@ -143,17 +136,17 @@ function PlayingScreen({
             dispatch({ type: state.isPaused ? 'resumeRound' : 'pauseRound' })
           }
         >
-          {state.isPaused ? 'Resume round' : 'Pause round'}
+          {state.isPaused ? 'Resume turn' : 'Pause turn'}
         </PrimaryButton>
         <button
           type="button"
           onClick={() => dispatch({ type: 'restartCurrentRound' })}
           className="rounded border border-ink bg-white px-4 py-2 text-sm font-semibold text-ink transition hover:bg-panel focus-visible:outline focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-player active:translate-y-px"
         >
-          Restart round
+          Restart turn
         </button>
         <PrimaryButton onClick={handleManualRoundEnd} disabled={state.isPaused}>
-          End this round
+          End turn
         </PrimaryButton>
       </div>
     </div>
@@ -192,8 +185,6 @@ export function ScreenRouter({ state, dispatch }: ScreenRouterProps) {
         <RoundEndScreen
           playerId={state.activePlayer}
           roundTime={state.lastRoundTime}
-          completedRounds={activePlayer.roundTimes.length}
-          totalRounds={ROUND_COUNT}
           onContinue={() => dispatch({ type: 'continueAfterRound' })}
         />
       );
@@ -203,8 +194,6 @@ export function ScreenRouter({ state, dispatch }: ScreenRouterProps) {
         <PlayerSwitchScreen
           previousPlayerId={1}
           nextPlayerId={2}
-          completedRounds={state.players[1].roundTimes.length}
-          totalRounds={ROUND_COUNT}
           onReady={() => dispatch({ type: 'startNextPlayer' })}
         />
       );

@@ -3,16 +3,12 @@ import type { PlayerId } from '../../types/game';
 type PlayerSwitchScreenProps = {
   previousPlayerId: PlayerId;
   nextPlayerId: PlayerId;
-  completedRounds: number;
-  totalRounds: number;
   onReady: () => void;
 };
 
 export function PlayerSwitchScreen({
   previousPlayerId,
   nextPlayerId,
-  completedRounds,
-  totalRounds,
   onReady,
 }: PlayerSwitchScreenProps) {
   return (
@@ -25,22 +21,19 @@ export function PlayerSwitchScreen({
           Player {nextPlayerId}, take the keyboard.
         </h2>
         <p className="max-w-2xl text-lg leading-8 text-zinc-700">
-          Player {previousPlayerId} has finished all {totalRounds} rounds. Pass
-          the shared device to Player {nextPlayerId} before choosing their
-          difficulty.
+          Player {previousPlayerId}'s survival time is on the board. Pass the
+          shared device to Player {nextPlayerId} before choosing a level.
         </p>
       </div>
 
       <div className="grid max-w-xl gap-3 border border-line bg-white p-4 text-sm text-zinc-700 sm:grid-cols-2">
         <div>
-          <p className="font-semibold text-ink">Completed set</p>
-          <p>
-            Player {previousPlayerId}: {completedRounds} / {totalRounds} rounds
-          </p>
+          <p className="font-semibold text-ink">Player {previousPlayerId}</p>
+          <p>Time recorded. Nicely done!</p>
         </div>
         <div>
           <p className="font-semibold text-ink">Next up</p>
-          <p>Player {nextPlayerId}: choose difficulty, then play 3 rounds</p>
+          <p>Player {nextPlayerId}: choose a level, then take one turn</p>
         </div>
       </div>
 

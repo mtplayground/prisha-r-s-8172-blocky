@@ -2,10 +2,10 @@ import type React from 'react';
 import {
   formatElapsedTime,
   getMatchResult,
-  getPlayerBestRoundTime,
   getPlayerOrder,
+  getPlayerScoreMs,
 } from '../../state/gameState';
-import { ROUND_COUNT, type MatchState, type PlayerId } from '../../types/game';
+import { type MatchState, type PlayerId } from '../../types/game';
 
 type ResultsScreenProps = {
   state: MatchState;
@@ -41,18 +41,16 @@ function getAnnouncement(result: ReturnType<typeof getMatchResult>) {
 
 function getResultDetail(result: ReturnType<typeof getMatchResult>) {
   if (result.status === 'winner') {
-    return `Best survival time: ${formatElapsedTime(
+    return `Survival time: ${formatElapsedTime(
       result.winningScoreMs,
     )}, ahead by ${formatElapsedTime(result.marginMs)}.`;
   }
 
   if (result.status === 'tie') {
-    return `Both players survived ${formatElapsedTime(
-      result.winningScoreMs,
-    )} in their best round.`;
+    return `Both players survived ${formatElapsedTime(result.winningScoreMs)}.`;
   }
 
-  return 'Both players need a completed round before a winner can be named.';
+  return 'Both players need to take their turn before a winner can be named.';
 }
 
 function ResultAnnouncement({
@@ -108,7 +106,7 @@ function PlayerResultCard({
   winningPlayer: PlayerId | null;
 }) {
   const player = state.players[playerId];
-  const bestRoundTime = getPlayerBestRoundTime(player);
+  const survivalTime = getPlayerScoreMs(player);
   const isWinner = winningPlayer === playerId;
 
   return (
@@ -130,27 +128,11 @@ function PlayerResultCard({
 
       <SummaryLine label="Difficulty" value={player.difficulty ?? 'pending'} />
       <SummaryLine
-        label="Rounds"
-        value={`${player.roundTimes.length} / ${ROUND_COUNT}`}
-      />
-      <SummaryLine
-        label="Final score"
+        label="Survival time"
         value={
-          bestRoundTime ? formatElapsedTime(bestRoundTime.elapsedMs) : 'pending'
+          survivalTime !== null ? formatElapsedTime(survivalTime) : 'pending'
         }
       />
-      <SummaryLine
-        label="Best round"
-        value={bestRoundTime ? `Round ${bestRoundTime.round}` : 'pending'}
-      />
-
-      <div className="mt-3 space-y-1 text-sm text-zinc-700">
-        {player.roundTimes.map((roundTime) => (
-          <p key={roundTime.round}>
-            Round {roundTime.round}: {formatElapsedTime(roundTime.elapsedMs)}
-          </p>
-        ))}
-      </div>
     </div>
   );
 }

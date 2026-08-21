@@ -13,7 +13,7 @@ const instructionItems = [
   },
   {
     label: 'Format',
-    text: '2 players, 3 rounds each, best time wins.',
+    text: '2 players, one turn each. The longer survival time wins.',
   },
 ];
 
