@@ -1,16 +1,19 @@
 import { formatElapsedTime } from '../../state/gameState';
 import type { PlayerId, RoundTime } from '../../types/game';
+import { ExitGameControl } from '../game/ExitGameControl';
 
 type RoundEndScreenProps = {
   playerId: PlayerId;
   roundTime: RoundTime | null;
   onContinue: () => void;
+  onExit: () => void;
 };
 
 export function RoundEndScreen({
   playerId,
   roundTime,
   onContinue,
+  onExit,
 }: RoundEndScreenProps) {
   const continueLabel =
     playerId === 1 ? 'Hand off to Player 2' : 'View results';
@@ -48,6 +51,10 @@ export function RoundEndScreen({
         >
           {continueLabel}
         </button>
+        <ExitGameControl
+          onExit={onExit}
+          message="This will abandon the match and clear both players' survival times."
+        />
       </div>
     </div>
   );

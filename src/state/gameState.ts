@@ -17,6 +17,7 @@ export type GameAction =
   | { type: 'completeRound'; elapsedMs: number }
   | { type: 'continueAfterRound' }
   | { type: 'startNextPlayer' }
+  | { type: 'exitMatch' }
   | { type: 'restartMatch' };
 
 export type MatchResult =
@@ -257,6 +258,11 @@ export function gameReducer(state: MatchState, action: GameAction): MatchState {
             isPaused: false,
             lastRoundTime: null,
           }
+        : state;
+
+    case 'exitMatch':
+      return state.screen === 'playing' || state.screen === 'roundEnd'
+        ? createInitialMatchState()
         : state;
 
     case 'restartMatch':
