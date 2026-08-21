@@ -20,9 +20,9 @@ function SummaryLine({
   value: React.ReactNode;
 }) {
   return (
-    <div className="flex items-center justify-between gap-4 border-b border-line py-2 last:border-b-0">
-      <span className="text-sm text-zinc-600">{label}</span>
-      <span className="text-sm font-semibold text-ink">{value}</span>
+    <div className="results-summary-line flex items-center justify-between gap-4 py-2 last:border-b-0">
+      <span className="text-sm">{label}</span>
+      <span className="text-sm font-semibold">{value}</span>
     </div>
   );
 }
@@ -82,13 +82,13 @@ function ResultAnnouncement({
         </div>
       ) : null}
       <div className="results-announcement__content space-y-3">
-        <p className="text-sm font-semibold uppercase tracking-normal text-hazard">
+        <p className="results-announcement__kicker text-sm font-semibold uppercase tracking-normal">
           Final results
         </p>
-        <h2 className="text-3xl font-bold tracking-normal">
+        <h2 className="results-announcement__title text-3xl font-bold tracking-normal">
           {getAnnouncement(result)}
         </h2>
-        <p className="max-w-2xl text-lg leading-8 text-zinc-700">
+        <p className="results-announcement__detail max-w-2xl text-lg leading-8">
           {getResultDetail(result)}
         </p>
       </div>
@@ -111,16 +111,14 @@ function PlayerResultCard({
 
   return (
     <div
-      className={`border bg-white p-4 ${
-        isWinner
-          ? 'border-player shadow-[0_0_0_3px_rgba(20,184,166,0.18)]'
-          : 'border-line'
+      className={`result-player-card result-player-card--player-${playerId} p-4 ${
+        isWinner ? 'result-player-card--winner' : ''
       }`}
     >
       <div className="mb-3 flex items-center justify-between gap-3">
         <h3 className="text-base font-bold">Player {playerId}</h3>
         {isWinner ? (
-          <span className="border border-player bg-player/10 px-2 py-1 text-xs font-semibold uppercase tracking-normal text-ink">
+          <span className="result-player-card__winner px-2 py-1 text-xs font-semibold uppercase tracking-normal">
             Winner
           </span>
         ) : null}
@@ -141,7 +139,7 @@ export function ResultsScreen({ state, onPlayAgain }: ResultsScreenProps) {
   const result = getMatchResult(state);
 
   return (
-    <div className="space-y-6">
+    <div className="results-screen space-y-6">
       <ResultAnnouncement result={result} />
 
       <div className="grid gap-4 sm:grid-cols-2">

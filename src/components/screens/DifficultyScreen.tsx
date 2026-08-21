@@ -38,14 +38,16 @@ export function DifficultyScreen({
 
   return (
     <div className="space-y-6">
-      <div className="space-y-3">
-        <p className="text-sm font-semibold uppercase tracking-normal text-hazard">
+      <div
+        className={`screen-intro screen-intro--player-${playerId} space-y-3`}
+      >
+        <p className="screen-kicker text-sm font-semibold uppercase tracking-normal">
           Difficulty
         </p>
-        <h2 className="text-3xl font-bold tracking-normal">
+        <h2 className="screen-title text-3xl font-bold tracking-normal">
           Player {playerId}, choose your level.
         </h2>
-        <p className="max-w-2xl text-lg leading-8 text-zinc-700">
+        <p className="screen-copy max-w-2xl text-lg leading-8">
           This sets the level for your one turn. The next player can pick a
           different level.
         </p>
@@ -60,7 +62,7 @@ export function DifficultyScreen({
               key={option.value}
               type="button"
               onClick={() => handleChooseDifficulty(option.value)}
-              className={`difficulty-card ${
+              className={`difficulty-card difficulty-card--${option.value} ${
                 isSelected ? 'difficulty-card--selected' : ''
               }`}
               aria-label={`Choose ${option.label} difficulty`}

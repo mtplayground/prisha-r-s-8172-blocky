@@ -247,6 +247,79 @@ select {
   box-shadow: 0 1.25rem 2.5rem rgba(84, 33, 182, 0.14);
 }
 
+.screen-intro {
+  --screen-accent: var(--arcade-violet);
+  --screen-accent-deep: var(--arcade-violet-deep);
+  --screen-tint: rgba(120, 56, 231, 0.13);
+  position: relative;
+  border-left: 0.35rem solid var(--screen-accent);
+  padding-left: 1rem;
+}
+
+.screen-intro--player-1 {
+  --screen-accent: var(--arcade-blue);
+  --screen-accent-deep: var(--arcade-blue-deep);
+  --screen-tint: rgba(22, 119, 255, 0.13);
+}
+
+.screen-intro--player-2 {
+  --screen-accent: var(--arcade-violet);
+  --screen-accent-deep: var(--arcade-violet-deep);
+  --screen-tint: rgba(120, 56, 231, 0.13);
+}
+
+.screen-kicker {
+  color: var(--screen-accent, var(--arcade-pink));
+}
+
+.screen-title {
+  color: var(--arcade-ink-deep);
+}
+
+.screen-copy {
+  color: var(--arcade-ink-soft);
+}
+
+.start-screen__hero {
+  position: relative;
+}
+
+.start-screen__title {
+  color: var(--arcade-ink-deep);
+  text-shadow: 0.16rem 0.16rem 0 rgba(5, 200, 255, 0.24);
+}
+
+.start-instruction {
+  --instruction-accent: var(--arcade-pink);
+  --instruction-tint: rgba(255, 62, 165, 0.14);
+  border: 1px solid color-mix(in srgb, var(--instruction-accent) 58%, white);
+  border-top: 0.35rem solid var(--instruction-accent);
+  background: linear-gradient(
+    145deg,
+    var(--instruction-tint),
+    rgba(255, 255, 255, 0.94) 70%
+  );
+  box-shadow: 0 0.65rem 1.25rem rgba(33, 22, 74, 0.1);
+}
+
+.start-instruction--cyan {
+  --instruction-accent: var(--arcade-cyan);
+  --instruction-tint: rgba(5, 200, 255, 0.14);
+}
+
+.start-instruction--lime {
+  --instruction-accent: #65a30d;
+  --instruction-tint: rgba(163, 230, 53, 0.21);
+}
+
+.start-instruction__label {
+  color: var(--arcade-ink-deep);
+}
+
+.start-instruction__copy {
+  color: var(--arcade-ink-soft);
+}
+
 .start-motif {
   position: relative;
   min-height: 13rem;
@@ -424,11 +497,18 @@ select {
 }
 
 .difficulty-card {
+  --difficulty-accent: var(--arcade-cyan);
+  --difficulty-tint: rgba(5, 200, 255, 0.14);
   position: relative;
   min-height: 8rem;
   overflow: hidden;
-  border: 1px solid var(--arcade-line);
-  background: var(--arcade-surface);
+  border: 1px solid color-mix(in srgb, var(--difficulty-accent) 58%, white);
+  border-top: 0.4rem solid var(--difficulty-accent);
+  background: linear-gradient(
+    145deg,
+    var(--difficulty-tint),
+    var(--arcade-surface) 72%
+  );
   padding: 1rem;
   color: var(--arcade-ink);
   text-align: left;
@@ -439,10 +519,26 @@ select {
     transform 180ms ease;
 }
 
+.difficulty-card--easy {
+  --difficulty-accent: #65a30d;
+  --difficulty-tint: rgba(163, 230, 53, 0.23);
+}
+
+.difficulty-card--medium {
+  --difficulty-accent: var(--arcade-orange);
+  --difficulty-tint: rgba(255, 140, 66, 0.2);
+}
+
+.difficulty-card--hard {
+  --difficulty-accent: var(--arcade-pink);
+  --difficulty-tint: rgba(255, 62, 165, 0.18);
+}
+
 .difficulty-card:hover:not(:disabled) {
-  border-color: var(--arcade-cyan);
-  background: #f8f5ff;
-  box-shadow: 0 0.7rem 1.25rem rgba(120, 56, 231, 0.18);
+  border-color: var(--difficulty-accent);
+  background: linear-gradient(145deg, var(--difficulty-tint), #ffffff 72%);
+  box-shadow: 0 0.7rem 1.25rem
+    color-mix(in srgb, var(--difficulty-accent) 27%, transparent);
   transform: translateY(-0.25rem);
 }
 
@@ -464,13 +560,14 @@ select {
 
 .difficulty-card--selected {
   z-index: 1;
-  border-color: var(--arcade-violet);
+  border-color: var(--difficulty-accent);
   background: linear-gradient(
     135deg,
-    rgba(120, 56, 231, 0.18),
+    var(--difficulty-tint),
     var(--arcade-surface) 68%
   );
-  box-shadow: 0 0 0 3px rgba(120, 56, 231, 0.22);
+  box-shadow: 0 0 0 3px
+    color-mix(in srgb, var(--difficulty-accent) 28%, transparent);
   animation: difficulty-card-lock 420ms cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
@@ -494,7 +591,7 @@ select {
 
 .difficulty-card__selected {
   margin-top: 0.75rem;
-  color: var(--arcade-blue-deep);
+  color: var(--difficulty-accent);
   font-size: 0.75rem;
   font-weight: 700;
   letter-spacing: 0.05em;
@@ -583,6 +680,146 @@ select {
     0 0.4rem 1rem rgba(120, 56, 231, 0.42);
 }
 
+.round-time-card {
+  --round-accent: var(--arcade-blue);
+  --round-tint: rgba(22, 119, 255, 0.15);
+  border: 2px solid var(--round-accent);
+  background: linear-gradient(135deg, var(--round-tint), #ffffff 70%);
+  box-shadow:
+    0 0 0 4px color-mix(in srgb, var(--round-accent) 16%, transparent),
+    0 0.85rem 1.5rem rgba(33, 22, 74, 0.12);
+  color: var(--arcade-ink-deep);
+}
+
+.round-time-card--player-2 {
+  --round-accent: var(--arcade-violet);
+  --round-tint: rgba(120, 56, 231, 0.15);
+}
+
+.round-time-card > :first-child {
+  color: var(--round-accent);
+}
+
+.handoff-summary {
+  border: 1px solid var(--arcade-line);
+  background: linear-gradient(135deg, rgba(120, 56, 231, 0.08), #ffffff 72%);
+  box-shadow: 0 0.85rem 1.5rem rgba(33, 22, 74, 0.1);
+}
+
+.handoff-summary__player {
+  --handoff-accent: var(--arcade-blue);
+  border-left: 0.28rem solid var(--handoff-accent);
+  padding-left: 0.75rem;
+  color: var(--arcade-ink-soft);
+}
+
+.handoff-summary__player > :first-child {
+  color: var(--arcade-ink-deep);
+}
+
+.handoff-summary__player--player-2 {
+  --handoff-accent: var(--arcade-violet);
+}
+
+.match-progress-panel {
+  --match-accent: var(--arcade-violet);
+  --match-accent-deep: var(--arcade-violet-deep);
+  --match-tint: rgba(120, 56, 231, 0.13);
+  border: 1px solid color-mix(in srgb, var(--match-accent) 43%, white);
+  border-top: 0.35rem solid var(--match-accent);
+  background: linear-gradient(145deg, var(--match-tint), #ffffff 58%);
+  box-shadow: 0 1rem 1.8rem rgba(33, 22, 74, 0.12);
+  color: var(--arcade-ink);
+}
+
+.match-progress-panel--player-1 {
+  --match-accent: var(--arcade-blue);
+  --match-accent-deep: var(--arcade-blue-deep);
+  --match-tint: rgba(22, 119, 255, 0.13);
+}
+
+.match-progress-panel--player-2 {
+  --match-accent: var(--arcade-violet);
+  --match-accent-deep: var(--arcade-violet-deep);
+  --match-tint: rgba(120, 56, 231, 0.13);
+}
+
+.match-progress-panel--complete {
+  --match-accent: var(--arcade-cyan);
+  --match-accent-deep: #087fa0;
+  --match-tint: rgba(5, 200, 255, 0.13);
+}
+
+.match-progress-panel__kicker {
+  color: var(--match-accent-deep);
+}
+
+.match-progress-panel__turn {
+  border: 1px solid var(--match-accent);
+  background: #ffffff;
+  color: var(--match-accent-deep);
+  box-shadow: 0 0 0 3px var(--match-tint);
+}
+
+.match-progress-panel__turn-label {
+  border-left: 0.25rem solid var(--match-accent);
+  color: var(--arcade-ink-soft);
+}
+
+.match-progress-panel__target {
+  border: 1px solid var(--match-accent);
+  background: var(--match-tint);
+  box-shadow: inset 0.25rem 0 var(--match-accent);
+  color: var(--arcade-ink);
+}
+
+.match-progress-panel__target > :first-child {
+  color: var(--match-accent-deep);
+}
+
+.match-progress-panel__target > :last-child {
+  color: var(--arcade-ink-soft);
+}
+
+.match-progress-player {
+  --progress-player-accent: var(--arcade-blue);
+  --progress-player-tint: rgba(22, 119, 255, 0.1);
+  border: 1px solid color-mix(in srgb, var(--progress-player-accent) 35%, white);
+  background: rgba(255, 255, 255, 0.86);
+  color: var(--arcade-ink);
+}
+
+.match-progress-player--player-2 {
+  --progress-player-accent: var(--arcade-violet);
+  --progress-player-tint: rgba(120, 56, 231, 0.1);
+}
+
+.match-progress-player--current {
+  border-color: var(--progress-player-accent);
+  background: linear-gradient(135deg, var(--progress-player-tint), #ffffff 72%);
+  box-shadow:
+    inset 0.3rem 0 var(--progress-player-accent),
+    0 0.5rem 0.9rem rgba(33, 22, 74, 0.08);
+}
+
+.match-progress-player__turn {
+  color: var(--progress-player-accent);
+}
+
+.match-progress-player__details dt,
+.match-progress-player__pending {
+  color: var(--arcade-ink-soft);
+}
+
+.match-progress-player__details dd {
+  color: var(--arcade-ink-deep);
+}
+
+.match-progress-player__pending {
+  border-top: 1px solid
+    color-mix(in srgb, var(--progress-player-accent) 22%, white);
+}
+
 .hud-item--active-player {
   border-color: var(--active-player-color);
   background: var(--active-player-tint);
@@ -626,32 +863,47 @@ select {
 .results-announcement {
   position: relative;
   overflow: hidden;
-  border: 1px solid var(--arcade-line);
+  border: 2px solid var(--arcade-line);
   background: var(--arcade-surface);
   padding: 1.5rem;
+  box-shadow: 0 1rem 2rem rgba(33, 22, 74, 0.12);
 }
 
 .results-announcement--winner {
   border-color: var(--results-accent);
-  background: linear-gradient(135deg, var(--results-tint), #ffffff 62%);
-  box-shadow: 0 0 0 3px var(--results-outline);
+  background: linear-gradient(
+    135deg,
+    var(--results-tint),
+    #ffffff 62%,
+    var(--results-glow)
+  );
+  box-shadow:
+    0 0 0 4px var(--results-outline),
+    0 1rem 2rem rgba(33, 22, 74, 0.14);
 }
 
 .results-announcement--player-1 {
   --results-accent: var(--arcade-blue);
   --results-tint: rgba(22, 119, 255, 0.15);
   --results-outline: rgba(22, 119, 255, 0.2);
+  --results-glow: rgba(5, 200, 255, 0.12);
 }
 
 .results-announcement--player-2 {
   --results-accent: var(--arcade-violet);
   --results-tint: rgba(120, 56, 231, 0.15);
   --results-outline: rgba(120, 56, 231, 0.2);
+  --results-glow: rgba(255, 62, 165, 0.12);
 }
 
 .results-announcement--tie {
   border-color: var(--arcade-cyan);
-  background: linear-gradient(135deg, #e2f8ff, var(--arcade-surface) 64%);
+  background: linear-gradient(
+    135deg,
+    #e2f8ff,
+    #fff4bf 44%,
+    var(--arcade-surface) 72%
+  );
 }
 
 .results-announcement__content {
@@ -659,6 +911,56 @@ select {
   z-index: 1;
   animation: results-announcement-enter 480ms cubic-bezier(0.22, 1, 0.36, 1)
     both;
+}
+
+.results-announcement__kicker {
+  color: var(--results-accent, var(--arcade-cyan));
+}
+
+.results-announcement__title {
+  color: var(--arcade-ink-deep);
+  text-shadow: 0.12rem 0.12rem 0 rgba(255, 255, 255, 0.82);
+}
+
+.results-announcement__detail {
+  color: var(--arcade-ink-soft);
+}
+
+.results-summary-line {
+  border-bottom: 1px solid var(--arcade-line);
+  color: var(--arcade-ink-soft);
+}
+
+.results-summary-line > :last-child {
+  color: var(--arcade-ink-deep);
+}
+
+.result-player-card {
+  --result-card-accent: var(--arcade-blue);
+  --result-card-tint: rgba(22, 119, 255, 0.12);
+  border: 1px solid color-mix(in srgb, var(--result-card-accent) 45%, white);
+  border-top: 0.35rem solid var(--result-card-accent);
+  background: linear-gradient(145deg, var(--result-card-tint), #ffffff 70%);
+  box-shadow: 0 0.6rem 1.1rem rgba(33, 22, 74, 0.09);
+}
+
+.result-player-card--player-2 {
+  --result-card-accent: var(--arcade-violet);
+  --result-card-tint: rgba(120, 56, 231, 0.12);
+}
+
+.result-player-card--winner {
+  border-width: 2px;
+  border-top-width: 0.35rem;
+  box-shadow:
+    0 0 0 4px color-mix(in srgb, var(--result-card-accent) 20%, transparent),
+    0 0.85rem 1.5rem rgba(33, 22, 74, 0.13);
+}
+
+.result-player-card__winner {
+  border: 1px solid var(--result-card-accent);
+  background: var(--result-card-tint);
+  color: var(--arcade-ink-deep);
 }
 
 .results-confetti,
