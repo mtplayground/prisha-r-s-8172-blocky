@@ -1,12 +1,4 @@
-type AudioContextConstructor = new () => AudioContext;
-type WebAudioWindow = Window &
-  typeof globalThis & {
-    webkitAudioContext?: AudioContextConstructor;
-  };
-
-function getAudioContextConstructor(): AudioContextConstructor | undefined {
-  return window.AudioContext ?? (window as WebAudioWindow).webkitAudioContext;
-}
+import { getAudioContextConstructor } from './arcadeMusic';
 
 export function playGameOverSound(): void {
   if (typeof window === 'undefined') {
