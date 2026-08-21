@@ -46,8 +46,8 @@ export function DifficultyScreen({
           Player {playerId}, choose your level.
         </h2>
         <p className="max-w-2xl text-lg leading-8 text-zinc-700">
-          Your choice applies to all 3 of your rounds. The next player can pick
-          a different level.
+          This sets the level for your one turn. The next player can pick a
+          different level.
         </p>
       </div>
 

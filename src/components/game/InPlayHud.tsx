@@ -2,8 +2,6 @@ import type { PlayerId } from '../../types/game';
 
 type InPlayHudProps = {
   playerId: PlayerId;
-  currentRound: number;
-  totalRounds: number;
   difficultyLabel: string;
   isPaused: boolean;
 };
@@ -31,14 +29,12 @@ function HudItem({
 
 export function InPlayHud({
   playerId,
-  currentRound,
-  totalRounds,
   difficultyLabel,
   isPaused,
 }: InPlayHudProps) {
   return (
     <div
-      aria-label={`Player ${playerId}, round ${currentRound} of ${totalRounds}, ${difficultyLabel} level, ${isPaused ? 'paused' : 'playing'}`}
+      aria-label={`Player ${playerId}'s turn, ${difficultyLabel} level, ${isPaused ? 'paused' : 'playing'}`}
       className="flex flex-wrap gap-2"
     >
       <HudItem
@@ -46,7 +42,6 @@ export function InPlayHud({
         value={`Player ${playerId}`}
         className={`hud-item--active-player hud-item--player-${playerId}`}
       />
-      <HudItem label="Round" value={`${currentRound} of ${totalRounds}`} />
       <HudItem label="Level" value={difficultyLabel} />
       <HudItem label="Controls" value="Move with ← →" />
       <HudItem label="Status" value={isPaused ? 'Paused' : 'Playing'} />

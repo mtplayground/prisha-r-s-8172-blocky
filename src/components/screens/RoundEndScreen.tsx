@@ -1,40 +1,33 @@
 import { formatElapsedTime } from '../../state/gameState';
 import type { PlayerId, RoundTime } from '../../types/game';
-import { getRoundEndContinueLabel } from '../../utils/roundEnd';
 
 type RoundEndScreenProps = {
   playerId: PlayerId;
   roundTime: RoundTime | null;
-  completedRounds: number;
-  totalRounds: number;
   onContinue: () => void;
 };
 
 export function RoundEndScreen({
   playerId,
   roundTime,
-  completedRounds,
-  totalRounds,
   onContinue,
 }: RoundEndScreenProps) {
-  const continueLabel = getRoundEndContinueLabel({
-    playerId,
-    completedRounds,
-    totalRounds,
-  });
+  const continueLabel =
+    playerId === 1 ? 'Hand off to Player 2' : 'View results';
 
   return (
     <div className="space-y-6">
       <div className="space-y-3">
         <p className="text-sm font-semibold uppercase tracking-normal text-hazard">
-          Round end
+          Turn complete
         </p>
         <h2 className="text-3xl font-bold tracking-normal">
-          Player {playerId}, round {roundTime?.round ?? completedRounds}{' '}
-          complete.
+          Player {playerId}, your time is in.
         </h2>
         <p className="max-w-2xl text-lg leading-8 text-zinc-700">
-          Continue when the shared device is ready for the next step.
+          {playerId === 1
+            ? 'Pass the shared device when Player 2 is ready to play.'
+            : 'See how both survival times compare.'}
         </p>
       </div>
 
@@ -55,9 +48,6 @@ export function RoundEndScreen({
         >
           {continueLabel}
         </button>
-        <span className="text-sm text-zinc-700">
-          {completedRounds} / {totalRounds} rounds complete
-        </span>
       </div>
     </div>
   );
