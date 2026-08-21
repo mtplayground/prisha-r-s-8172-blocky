@@ -5,14 +5,17 @@ type StartScreenProps = {
 const instructionItems = [
   {
     label: 'Goal',
+    tone: 'pink',
     text: 'Dodge the falling blocks for as long as you can.',
   },
   {
     label: 'Controls',
+    tone: 'cyan',
     text: 'Move with the left and right arrow keys.',
   },
   {
     label: 'Format',
+    tone: 'lime',
     text: '2 players, one turn each. The longer survival time wins.',
   },
 ];
@@ -20,15 +23,15 @@ const instructionItems = [
 export function StartScreen({ onBegin }: StartScreenProps) {
   return (
     <div className="space-y-7">
-      <div className="grid gap-6 lg:grid-cols-[1fr_17rem] lg:items-center">
+      <div className="start-screen__hero grid gap-6 lg:grid-cols-[1fr_17rem] lg:items-center">
         <div className="space-y-4">
-          <p className="text-sm font-semibold uppercase tracking-normal text-hazard">
+          <p className="screen-kicker text-sm font-semibold uppercase tracking-normal">
             Welcome
           </p>
-          <h2 className="text-5xl font-bold tracking-normal sm:text-6xl">
+          <h2 className="start-screen__title text-5xl font-bold tracking-normal sm:text-6xl">
             Blocky
           </h2>
-          <p className="max-w-2xl text-lg leading-8 text-zinc-700">
+          <p className="screen-copy max-w-2xl text-lg leading-8">
             Stay alive by keeping your block clear of anything falling from
             above.
           </p>
@@ -48,11 +51,16 @@ export function StartScreen({ onBegin }: StartScreenProps) {
 
       <div className="grid gap-3 sm:grid-cols-3">
         {instructionItems.map((item) => (
-          <section key={item.label} className="border border-line bg-panel p-4">
-            <h3 className="text-sm font-bold uppercase tracking-normal text-ink">
+          <section
+            key={item.label}
+            className={`start-instruction start-instruction--${item.tone} p-4`}
+          >
+            <h3 className="start-instruction__label text-sm font-bold uppercase tracking-normal">
               {item.label}
             </h3>
-            <p className="mt-2 text-sm leading-6 text-zinc-700">{item.text}</p>
+            <p className="start-instruction__copy mt-2 text-sm leading-6">
+              {item.text}
+            </p>
           </section>
         ))}
       </div>

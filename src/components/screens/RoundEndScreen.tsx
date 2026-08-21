@@ -20,25 +20,29 @@ export function RoundEndScreen({
 
   return (
     <div className="space-y-6">
-      <div className="space-y-3">
-        <p className="text-sm font-semibold uppercase tracking-normal text-hazard">
+      <div
+        className={`screen-intro screen-intro--player-${playerId} space-y-3`}
+      >
+        <p className="screen-kicker text-sm font-semibold uppercase tracking-normal">
           Turn complete
         </p>
-        <h2 className="text-3xl font-bold tracking-normal">
+        <h2 className="screen-title text-3xl font-bold tracking-normal">
           Player {playerId}, your time is in.
         </h2>
-        <p className="max-w-2xl text-lg leading-8 text-zinc-700">
+        <p className="screen-copy max-w-2xl text-lg leading-8">
           {playerId === 1
             ? 'Pass the shared device when Player 2 is ready to play.'
             : 'See how both survival times compare.'}
         </p>
       </div>
 
-      <div className="w-fit border border-line bg-white px-5 py-4">
-        <p className="text-xs font-semibold uppercase tracking-normal text-zinc-600">
+      <div
+        className={`round-time-card round-time-card--player-${playerId} w-fit px-5 py-4`}
+      >
+        <p className="text-xs font-semibold uppercase tracking-normal">
           Survival time
         </p>
-        <p className="mt-1 font-mono text-4xl font-bold tabular-nums text-ink">
+        <p className="mt-1 font-mono text-4xl font-bold tabular-nums">
           {roundTime ? formatElapsedTime(roundTime.elapsedMs) : '0.0s'}
         </p>
       </div>
