@@ -1,3 +1,4 @@
+import { useEffect, useRef } from 'react';
 import type React from 'react';
 import {
   formatElapsedTime,
@@ -6,6 +7,7 @@ import {
   getPlayerScoreMs,
 } from '../../state/gameState';
 import { type MatchState, type PlayerId } from '../../types/game';
+import { playResultsTune, type ResultsTune } from '../../utils/arcadeMusic';
 
 type ResultsScreenProps = {
   state: MatchState;
@@ -137,6 +139,29 @@ function PlayerResultCard({
 
 export function ResultsScreen({ state, onPlayAgain }: ResultsScreenProps) {
   const result = getMatchResult(state);
+  const hasPlayedTuneRef = useRef(false);
+
+  useEffect(() => {
+    if (hasPlayedTuneRef.current || result.status === 'incomplete') {
+      return;
+    }
+
+    let controller: ReturnType<typeof playResultsTune> = null;
+    const tuneStartId = window.setTimeout(() => {
+      if (hasPlayedTuneRef.current) {
+        return;
+      }
+
+      hasPlayedTuneRef.current = true;
+      const tune: ResultsTune = result.status === 'tie' ? 'tie' : 'winner';
+      controller = playResultsTune(tune);
+    }, 0);
+
+    return () => {
+      window.clearTimeout(tuneStartId);
+      controller?.stop();
+    };
+  }, [result.status]);
 
   return (
     <div className="results-screen space-y-6">
