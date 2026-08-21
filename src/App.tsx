@@ -17,7 +17,14 @@ function App() {
 
   return (
     <main className="arcade-shell min-h-screen bg-panel text-ink">
-      <div className="mx-auto flex min-h-screen w-full max-w-5xl flex-col px-5 py-6 sm:px-8">
+      <div className="arcade-backdrop" aria-hidden="true">
+        <span className="arcade-backdrop__block arcade-backdrop__block--one" />
+        <span className="arcade-backdrop__block arcade-backdrop__block--two" />
+        <span className="arcade-backdrop__block arcade-backdrop__block--three" />
+        <span className="arcade-backdrop__block arcade-backdrop__block--four" />
+        <span className="arcade-backdrop__block arcade-backdrop__block--five" />
+      </div>
+      <div className="arcade-content relative z-10 mx-auto flex min-h-screen w-full max-w-5xl flex-col px-5 py-6 sm:px-8">
         <header className="arcade-header flex items-center justify-between border-b border-line px-4 py-4 sm:px-5">
           <h1 className="text-2xl font-bold tracking-normal">{appTitle}</h1>
           <span className="arcade-match-badge rounded border px-3 py-1 text-sm font-bold">
